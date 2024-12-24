@@ -1,30 +1,34 @@
-use std::env;
 use aws_sdk_s3::config::Credentials;
 use aws_sdk_s3::primitives::ByteStream;
 use aws_sdk_s3::{Client, Config};
 use aws_types::region::Region;
-use bzip2::write::BzEncoder; // Import the synchronous BzEncoder
+// Import the synchronous BzEncoder
+use bzip2::write::BzEncoder;
 use bzip2::Compression;
+use std::env;
 use tar::Builder;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Source MinIO configuration
     let src_region = env::var("AWS_REGION").unwrap_or_else(|_| "us-east-1".to_string());
-    let src_endpoint = env::var("OBJECT_STORAGE_ENDPOINT").expect("OBJECT_STORAGE_ENDPOINT must be set");
+    let src_endpoint =
+        env::var("OBJECT_STORAGE_ENDPOINT").expect("OBJECT_STORAGE_ENDPOINT must be set");
     let src_access_key = env::var("AWS_ACCESS_KEY").expect("AWS_ACCESS_KEY must be set");
     let src_secret_key = env::var("AWS_SECRET_KEY").expect("AWS_SECRET_KEY must be set");
     let src_bucket = env::var("OBJECT_STORAGE_BUCKET").expect("OBJECT_STORAGE_BUCKET must be set");
     let src_bucket_str = src_bucket.as_str();
+    let src_prefix = "path/";
 
     // Destination MinIO configuration
     let dst_region = env::var("AWS_REGION").unwrap_or_else(|_| "us-east-1".to_string());
-    let dst_endpoint = env::var("OBJECT_STORAGE_ENDPOINT").expect("OBJECT_STORAGE_ENDPOINT must be set");
+    let dst_endpoint =
+        env::var("OBJECT_STORAGE_ENDPOINT").expect("OBJECT_STORAGE_ENDPOINT must be set");
     let dst_access_key = env::var("AWS_ACCESS_KEY").expect("AWS_ACCESS_KEY must be set");
     let dst_secret_key = env::var("AWS_SECRET_KEY").expect("AWS_SECRET_KEY must be set");
     let dst_bucket = env::var("OBJECT_STORAGE_BUCKET").expect("OBJECT_STORAGE_BUCKET must be set");
     let dst_bucket_str = dst_bucket.as_str();
-    let dst_object = "output.tar.bz2";
+    let dst_object = ".archive/output.tar.bz2";
 
     // Initialize source and destination S3 clients
     let src_config = Config::builder()
@@ -62,6 +66,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match src_client
         .list_objects_v2()
         .bucket(src_bucket_str)
+        .prefix(src_prefix)
         .send()
         .await
     {
@@ -97,7 +102,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
         Err(e) => {
-            eprintln!("Failed to list objects in bucket '{}': {}", src_bucket_str, e);
+            eprintln!(
+                "Failed to list objects in bucket '{}': {}",
+                src_bucket_str, e
+            );
         }
     }
 
