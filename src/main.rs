@@ -1,10 +1,10 @@
 use aws_sdk_s3::config::Credentials;
-use aws_sdk_s3::primitives::ByteStream;
+use aws_sdk_s3::primitives::{ByteStream, DateTime};
 use aws_sdk_s3::{Client, Config};
 use aws_types::region::Region;
-// Import the synchronous BzEncoder
 use bzip2::write::BzEncoder;
 use bzip2::Compression;
+use chrono::{Duration, Utc};
 use std::env;
 use tar::Builder;
 
@@ -62,18 +62,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bz2_encoder = BzEncoder::new(&mut archive_buffer, Compression::best()); // Synchronous BzEncoder
     let mut tar_builder = Builder::new(bz2_encoder);
 
-    // List objects in the source bucket
-    match src_client
-        .list_objects_v2()
-        .bucket(src_bucket_str)
-        .prefix(src_prefix)
-        .send()
-        .await
-    {
-        Ok(objects) => {
-            if let Some(contents) = objects.contents {
-                for object in contents {
-                    if let Some(key) = object.key {
+    let now = Utc::now();
+    let cutoff_dt = now - Duration::seconds(24 * 60 * 60);
+    let cutoff_aws_dt = DateTime::from_secs(cutoff_dt.timestamp());
+
+    // List and filter objects in the source bucket
+    let mut continuation_token = None;
+
+    loop {
+        let mut request = src_client
+            .list_objects_v2()
+            .bucket(src_bucket_str)
+            .prefix(src_prefix);
+
+        if let Some(token) = continuation_token {
+            request = request.continuation_token(token);
+        }
+
+        let response = request.send().await?;
+
+        if let Some(contents) = response.contents {
+            for obj in contents.into_iter() {
+                if obj.last_modified < Some(cutoff_aws_dt) {
+                    if let Some(key) = obj.key {
                         // Get the object from the source bucket
                         match src_client
                             .get_object()
@@ -101,12 +112,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         }
-        Err(e) => {
-            eprintln!(
-                "Failed to list objects in bucket '{}': {}",
-                src_bucket_str, e
-            );
+
+        if response.next_continuation_token.is_none() {
+            break;
         }
+
+        continuation_token = response.next_continuation_token;
     }
 
     // Finalize the tar archive and Bzip2 compression
