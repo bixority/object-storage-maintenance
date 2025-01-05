@@ -6,7 +6,7 @@ use aws_types::region::Region;
 use bzip2::write::BzEncoder;
 use bzip2::Compression;
 use chrono::{Duration, Utc};
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use std::env;
 use tar::Builder;
 
@@ -17,14 +17,30 @@ struct S3Params {
     endpoint: String,
 }
 
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-struct Args {
-    #[arg(short, long)]
-    src_prefix: String,
 
-    #[arg(short, long)]
-    dst_object: String,
+#[derive(Subcommand, Debug)]
+enum Commands {
+    Archive {
+        #[arg(long)]
+        src_bucket: String,
+
+        #[arg(long)]
+        src_prefix: String,
+
+        #[arg(long)]
+        dst_bucket: String,
+
+        #[arg(long)]
+        dst_prefix: String,
+    },
+}
+
+
+#[derive(Parser, Debug)]
+#[command(version, about = "Object storage maintenance tool", long_about = None)]
+struct Args {
+    #[command(subcommand)]
+    command: Option<Commands>,
 }
 
 fn get_client(params: &S3Params) -> Client {
@@ -119,20 +135,14 @@ fn get_s3_params() -> S3Params {
     params
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args = Args::parse();
-    let src_prefix = args.src_prefix;
-    let dst_object = args.dst_object;
-
-    let src_bucket = env::var("OBJECT_STORAGE_BUCKET").expect("OBJECT_STORAGE_BUCKET must be set");
+async fn archive(src_bucket: String, src_prefix: String, dst_bucket: String, dst_prefix: String) -> Result<(), Box<dyn std::error::Error>>{
     let src_bucket_str = src_bucket.as_str();
     let s3_params = get_s3_params();
     let src_client = get_client(&s3_params);
 
-    let dst_bucket = src_bucket.clone();
     let dst_bucket_str = dst_bucket.as_str();
     let dst_client = get_client(&s3_params);
+    let dst_object_key = dst_prefix + "archive.tar.bz2";
 
     let mut archive_buffer: Vec<u8> = Vec::new();
     let bz2_encoder = BzEncoder::new(&mut archive_buffer, Compression::best());
@@ -203,20 +213,38 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match dst_client
         .put_object()
         .bucket(dst_bucket_str)
-        .key(&dst_object)
+        .key(&dst_object_key)
         .body(body)
         .send()
         .await
     {
         Ok(_) => println!(
             "Successfully uploaded tar.bz2 archive to {}/{}",
-            dst_bucket_str, &dst_object
+            dst_bucket_str, &dst_object_key
         ),
         Err(e) => eprintln!("Failed to upload archive: {}", e),
     }
 
     if let Err(e) = delete_archived_keys(src_client, src_bucket_str, archived_keys).await {
         eprintln!("Error deleting archived keys: {}", e);
+    }
+
+    Ok(())
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args = Args::parse();
+
+    match args.command {
+        Some(Commands::Archive { src_bucket, src_prefix, dst_bucket, dst_prefix }) => {
+            if let Err(e) = archive(src_bucket, src_prefix, dst_bucket, dst_prefix).await {
+                eprintln!("Error running 'archive' command: {}", e);
+            }
+        }
+        None => {
+            println!("No subcommand selected. Add a subcommand like 'archive'.");
+        }
     }
 
     Ok(())

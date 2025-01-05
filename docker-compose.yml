@@ -32,7 +32,10 @@ services:
     command: [
       "/object_storage_maintenance",
       "archive",
-      "--prefixes", "${PREFIXES:-audit/}",
+      "--src_bucket", "${OBJECT_STORAGE_BUCKET:-test}",
+      "--src_prefix", "${SRC_PREFIX:-audit/}",
+      "--dst_bucket", "${OBJECT_STORAGE_BUCKET:-test}",
+      "--dst_prefix", "${DST_PREFIX:-.archive/}",
     ]
     depends_on:
       - minio
