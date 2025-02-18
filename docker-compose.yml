@@ -1,21 +1,21 @@
 services:
-#  minio:
-#    image: quay.io/minio/minio:latest
-#    container_name: minio
-#    ports:
-#      - "9000:9000"
-#      - "9001:9001"
-#    environment:
-#      MINIO_ROOT_USER: "${MINIO_ROOT_USER:-root}"
-#      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:-rootroot}"
-#    command: [
-#      "server",
-#      "/data",
-#      "--console-address",
-#      ":9001"
-#    ]
-#    volumes:
-#      - minio-data:/data
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER:-root}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:-rootroot}"
+    command: [
+      "server",
+      "/data",
+      "--console-address",
+      ":9001"
+    ]
+    volumes:
+      - minio-data:/data
 
   object-storage-maintenance:
     build:
@@ -30,15 +30,18 @@ services:
       OBJECT_STORAGE_ENDPOINT: "${OBJECT_STORAGE_ENDPOINT:-http://minio:9000}"
       OBJECT_STORAGE_BUCKET: "${OBJECT_STORAGE_BUCKET:-test}"
     command: [
-      "/object_storage_maintenance",
-      "archive",
-      "--src_bucket", "${OBJECT_STORAGE_BUCKET:-test}",
-      "--src_prefix", "${SRC_PREFIX:-audit/}",
-      "--dst_bucket", "${OBJECT_STORAGE_BUCKET:-test}",
-      "--dst_prefix", "${DST_PREFIX:-.archive/}",
+      "/bin/ls",
+      "-lh",
+      "/",
+#      "/object-storage-maintenance",
+#      "archive",
+#      "--src_bucket", "${OBJECT_STORAGE_BUCKET:-test}",
+#      "--src_prefix", "${SRC_PREFIX:-audit/}",
+#      "--dst_bucket", "${OBJECT_STORAGE_BUCKET:-test}",
+#      "--dst_prefix", "${DST_PREFIX:-.archive/}",
     ]
-#    depends_on:
-#      - minio
+    depends_on:
+      - minio
 
 networks:
   guest:

@@ -19,7 +19,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends xz-utils && \
 COPY ./ /build/
 RUN make release
 
-FROM gcr.io/distroless/static-debian12:nonroot
+#FROM gcr.io/distroless/static-debian12:nonroot
+FROM python:3.13-bookworm
 
 LABEL org.opencontainers.image.description="Object storage maintenance tool"
 LABEL authors="Bixority SIA"
@@ -28,6 +29,6 @@ LABEL authors="Bixority SIA"
 WORKDIR /
 COPY --from=build-image /build/target/release/object-storage-maintenance /build/LICENSE /
 
-USER nonroot:nonroot
+#USER nonroot:nonroot
 
-CMD ["/object-storage-maintenance"]
+#ENTRYPOINT ["bash"]
