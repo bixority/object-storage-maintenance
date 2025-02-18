@@ -3,7 +3,9 @@ use futures::io::AsyncRead as FuturesAsyncRead;
 use futures::AsyncWrite;
 use std::error::Error;
 use std::io;
+use std::pin::Pin;
 use std::sync::Arc;
+use std::task::{Context, Poll};
 use tokio::io::{AsyncBufRead, ReadBuf};
 
 const BUFFER_SIZE: usize = 5 * 1024 * 1024; // 5MB
@@ -26,15 +28,15 @@ where
     R: AsyncBufRead + Unpin,
 {
     fn poll_read(
-        mut self: std::pin::Pin<&mut Self>,
-        cx: &mut std::task::Context<'_>,
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
         buf: &mut [u8],
-    ) -> std::task::Poll<Result<usize, std::io::Error>> {
+    ) -> Poll<Result<usize, io::Error>> {
         // Create a ReadBuf from the byte slice
         let mut read_buf = ReadBuf::new(buf);
 
         // Use poll_read to fill the ReadBuf from the inner AsyncBufRead
-        let poll_result = std::pin::Pin::new(&mut self.inner).poll_read(cx, &mut read_buf);
+        let poll_result = Pin::new(&mut self.inner).poll_read(cx, &mut read_buf);
 
         // Return the result, mapping it to the number of bytes filled in the buffer
         poll_result.map(|result| result.map(|_| read_buf.filled().len()))
@@ -65,25 +67,25 @@ impl MultipartUploadSink {
 
 impl AsyncWrite for MultipartUploadSink {
     fn poll_write(
-        mut self: std::pin::Pin<&mut Self>,
-        _: &mut std::task::Context,
+        mut self: Pin<&mut Self>,
+        _: &mut Context,
         buf: &[u8],
-    ) -> std::task::Poll<Result<usize, io::Error>> {
+    ) -> Poll<Result<usize, io::Error>> {
         self.buffer.extend_from_slice(buf);
-        std::task::Poll::Ready(Ok(buf.len()))
+        Poll::Ready(Ok(buf.len()))
     }
 
     fn poll_flush(
-        self: std::pin::Pin<&mut Self>,
-        _: &mut std::task::Context,
-    ) -> std::task::Poll<Result<(), io::Error>> {
-        std::task::Poll::Ready(Ok(()))
+        self: Pin<&mut Self>,
+        _: &mut Context,
+    ) -> Poll<Result<(), io::Error>> {
+        Poll::Ready(Ok(()))
     }
 
     fn poll_close(
-        self: std::pin::Pin<&mut Self>,
-        _: &mut std::task::Context,
-    ) -> std::task::Poll<Result<(), io::Error>> {
-        std::task::Poll::Ready(Ok(()))
+        self: Pin<&mut Self>,
+        _: &mut Context,
+    ) -> Poll<Result<(), io::Error>> {
+        Poll::Ready(Ok(()))
     }
 }
