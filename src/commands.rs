@@ -3,12 +3,13 @@ use crate::s3::{get_client, get_s3_params};
 use aws_sdk_s3::primitives::DateTime;
 use chrono::{Duration, Utc};
 use std::error::Error;
+use std::sync::Arc;
 
 pub async fn archive(
     src_bucket: String,
     src_prefix: String,
     dst_bucket: String,
-    dst_prefix: String,
+    dst_prefix: String
 ) -> Result<(), Box<dyn Error>> {
     let s3_params = get_s3_params();
     let src_client = get_client(&s3_params);
@@ -23,12 +24,13 @@ pub async fn archive(
     let mut archived_keys: Vec<String> = Vec::new();
 
     if let Err(e) = compress(
-        &src_client,
+        Arc::new(src_client.clone()),
         src_bucket.clone(),
         src_prefix,
-        &dst_client,
+        Arc::new(dst_client),
         dst_bucket,
         dst_object_key,
+        cutoff_aws_dt,
         &mut archived_keys,
     )
     .await
@@ -38,7 +40,7 @@ pub async fn archive(
 
     let src_bucket_str = src_bucket.as_str();
 
-    if let Err(e) = delete_keys(src_client, src_bucket_str, archived_keys).await {
+    if let Err(e) = delete_keys(Arc::new(src_client), src_bucket_str, archived_keys).await {
         eprintln!("Error deleting archived keys: {}", e);
     }
 

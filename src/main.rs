@@ -1,6 +1,7 @@
 mod commands;
 mod object_storage;
 mod s3;
+mod uploader;
 
 use crate::commands::archive;
 use clap::{Parser, Subcommand};

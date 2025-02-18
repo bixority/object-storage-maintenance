@@ -1,18 +1,14 @@
+use crate::uploader::{MultipartUploadSink, TokioBufReadAsAsyncRead};
+use async_compression::futures::write::BzEncoder;
+use async_tar::{Builder, Header};
 use aws_sdk_s3::primitives::DateTime;
 use aws_sdk_s3::types::{Delete, ObjectIdentifier};
 use aws_sdk_s3::Client;
-use bzip2::bufread::BzEncoder;
-use bzip2::Compression;
-use chrono::{Duration, Utc};
 use std::error::Error;
-use tar::{Builder, Header};
-use tokio_util::io::ReaderStream;
-
-const CHUNK_SIZE: usize = 16 * 1024 * 1024; // 16 MB
-const COMPRESSED_CHUNK_SIZE: usize = 5 * 1024 * 1024; // 5 MB
+use std::sync::Arc;
 
 pub async fn delete_keys(
-    client: Client,
+    client: Arc<Client>,
     bucket_name: &str,
     keys: Vec<String>,
 ) -> Result<(), aws_sdk_s3::Error> {
@@ -69,23 +65,20 @@ pub async fn delete_keys(
 }
 
 pub async fn compress(
-    src_client: &Client,
+    src_client: Arc<Client>,
     src_bucket: String,
     src_prefix: String,
-    dst_client: &Client,
+    dst_client: Arc<Client>,
     dst_bucket: String,
     dst_prefix: String,
+    cutoff_aws_dt: DateTime,
     processed_keys: &mut Vec<String>,
 ) -> Result<(), Box<dyn Error>> {
     let src_bucket_str = src_bucket.as_str();
-
     let dst_object_key = dst_prefix + "archive.tar.bz2";
 
-    let now = Utc::now();
-    let cutoff_dt = now - Duration::seconds(24 * 60 * 60);
-    let cutoff_aws_dt = DateTime::from_secs(cutoff_dt.timestamp());
-
-    let bz2_encoder = BzEncoder::new(sink, Compression::best());
+    let sink = MultipartUploadSink::new(dst_client, dst_bucket, dst_object_key).await?;
+    let bz2_encoder = BzEncoder::new(sink);
     let mut tar_builder = Builder::new(bz2_encoder);
 
     let mut continuation_token = None;
@@ -121,14 +114,17 @@ pub async fn compress(
                                 match object {
                                     Ok(resp) => {
                                         let stream = resp.body.into_async_read();
-                                        let mut reader =
-                                            ReaderStream::with_capacity(stream, CHUNK_SIZE);
+                                        let async_read = TokioBufReadAsAsyncRead::new(stream);
 
                                         let mut header = Header::new_gnu();
                                         header.set_size(size as u64);
                                         header.set_mode(0o644);
+                                        header.set_mtime(last_modified.secs() as u64);
                                         header.set_cksum();
-                                        tar_builder.append_data(&mut header, &key, &mut reader)?;
+                                        tar_builder
+                                            .append_data(&mut header, &key, async_read)
+                                            .await
+                                            .unwrap();
 
                                         processed_keys.push(key);
                                     }
@@ -148,12 +144,14 @@ pub async fn compress(
                 continuation_token = response.next_continuation_token;
             }
             Err(e) => {
-                eprintln!("Failed to list objects: {}", e)
+                eprintln!("Failed to list objects: {}", e);
+
+                break;
             }
         }
     }
 
-    tar_builder.finish()?;
+    tar_builder.finish().await.unwrap();
 
     Ok(())
 }

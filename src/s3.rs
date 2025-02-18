@@ -27,7 +27,7 @@ impl fmt::Display for S3Error {
 
 impl Error for S3Error {}
 
-struct S3Params {
+pub struct S3Params {
     region: String,
     access_key: String,
     secret_key: String,
