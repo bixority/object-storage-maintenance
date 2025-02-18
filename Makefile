@@ -1,11 +1,12 @@
-OUTPUT := ./target/release/object-storage-maintenance
+OUTPUT := ./target/x86_64-unknown-linux-musl/release/object-storage-maintenance
 
 # Default target: build the application
 all: build
 
 # Build the static binary
 build:
-	cargo build --release
+	rustup target add x86_64-unknown-linux-musl
+	cargo build --release --target x86_64-unknown-linux-musl
 
 # Compress the binary with UPX
 compress: build

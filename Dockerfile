@@ -9,11 +9,11 @@ ENV CGO_ENABLED=0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-RUN apt-get update && apt-get install -y --no-install-recommends xz-utils && \
+RUN apt update && apt install -y --no-install-recommends xz-utils musl-tools musl-dev && \
   curl -Ls https://github.com/upx/upx/releases/download/v${upx_version}/upx-${upx_version}-${TARGETARCH}_linux.tar.xz -o - | tar xvJf - -C /tmp && \
   cp /tmp/upx-${upx_version}-${TARGETARCH}_linux/upx /usr/local/bin/ && \
   chmod +x /usr/local/bin/upx && \
-  apt-get remove -y xz-utils && \
+  apt remove -y xz-utils && \
   rm -rf /var/lib/apt/lists/*
 
 COPY ./ /build/
@@ -26,7 +26,7 @@ LABEL authors="Bixority SIA"
 
 
 WORKDIR /
-COPY --from=build-image /build/target/release/object-storage-maintenance /build/LICENSE /
+COPY --from=build-image /build/target/x86_64-unknown-linux-musl/release/object-storage-maintenance /build/LICENSE /
 
 USER nonroot:nonroot
 

@@ -6,6 +6,8 @@ mod uploader;
 use crate::commands::archive;
 use clap::{Parser, Subcommand};
 use std::error::Error;
+use std::io;
+use std::io::Write;
 
 #[derive(Subcommand, Debug)]
 enum Commands {
@@ -50,6 +52,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
             println!("No subcommand selected. Add a subcommand like 'archive'.");
         }
     }
+
+    io::stdout().flush().unwrap();
 
     Ok(())
 }
