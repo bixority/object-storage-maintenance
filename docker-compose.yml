@@ -30,12 +30,11 @@ services:
       OBJECT_STORAGE_ENDPOINT: "${OBJECT_STORAGE_ENDPOINT:-http://minio:9000}"
       OBJECT_STORAGE_BUCKET: "${OBJECT_STORAGE_BUCKET:-test}"
     command: [
-      "/object-storage-maintenance",
       "archive",
-      "--src_bucket", "${OBJECT_STORAGE_BUCKET:-test}",
-      "--src_prefix", "${SRC_PREFIX:-audit/}",
-      "--dst_bucket", "${OBJECT_STORAGE_BUCKET:-test}",
-      "--dst_prefix", "${DST_PREFIX:-.archive/}",
+      "--src-bucket", "${OBJECT_STORAGE_BUCKET:-test}",
+      "--src-prefix", "${SRC_PREFIX:-audit/}",
+      "--dst-bucket", "${OBJECT_STORAGE_BUCKET:-test}",
+      "--dst-prefix", "${DST_PREFIX:-.archive/}",
     ]
     depends_on:
       - minio
