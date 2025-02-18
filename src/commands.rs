@@ -18,7 +18,7 @@ pub async fn archive(
     let dst_client = get_client(&s3_params);
 
     let now = Utc::now();
-    let cutoff_dt = now - Duration::seconds(24 * 60 * 60);
+    let cutoff_dt = now - Duration::seconds(1);
     let cutoff_aws_dt = DateTime::from_secs(cutoff_dt.timestamp());
 
     let mut archived_keys: Vec<String> = Vec::new();
@@ -35,7 +35,7 @@ pub async fn archive(
     )
     .await
     {
-        eprintln!("Error deleting archived keys: {}", e);
+        eprintln!("Error compressing objects: {}", e);
     }
 
     let src_bucket_str = src_bucket.as_str();
