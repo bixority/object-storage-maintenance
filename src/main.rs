@@ -2,6 +2,7 @@ mod commands;
 mod object_storage;
 mod s3;
 mod uploader;
+mod tokio_to_async;
 
 use crate::commands::archive;
 use clap::{Parser, Subcommand};

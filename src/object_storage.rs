@@ -1,4 +1,5 @@
-use crate::uploader::{MultipartUploadSink, TokioBufReadAsAsyncRead};
+use crate::tokio_to_async::TokioBufReadAsAsyncRead;
+use crate::uploader::MultipartUploadSink;
 use async_compression::futures::write::BzEncoder;
 use async_tar::{Builder, Header};
 use aws_sdk_s3::primitives::DateTime;
