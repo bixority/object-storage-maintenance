@@ -6,7 +6,7 @@ all: build
 # Build the static binary
 build:
 	rustup target add x86_64-unknown-linux-musl
-	RUSTFLAGS='-C linker=ld.lld -C relocation-model=static -C strip=symbols' cargo build --release --target x86_64-unknown-linux-musl
+	RUSTFLAGS='-C relocation-model=static -C strip=symbols' cargo build --release --target x86_64-unknown-linux-musl
 
 # Compress the binary with UPX
 compress: build
