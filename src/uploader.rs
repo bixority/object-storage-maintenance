@@ -1,12 +1,12 @@
 use aws_sdk_s3::types::CompletedPart;
 use aws_sdk_s3::Client;
-use futures::executor::block_on;
-use futures::AsyncWrite;
 use std::error::Error;
 use std::io;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
+use tokio::io::AsyncWrite;
+use tokio::runtime::Handle;
 
 const BUFFER_SIZE: usize = 5 * 1024 * 1024; // 5MB
 
@@ -100,8 +100,10 @@ impl AsyncWrite for MultipartUploadSink {
         Poll::Ready(Ok(()))
     }
 
-    fn poll_close(mut self: Pin<&mut Self>, _: &mut Context) -> Poll<Result<(), io::Error>> {
-        let result = block_on(self.complete_upload());
+    fn poll_shutdown(mut self: Pin<&mut Self>, _: &mut Context) -> Poll<Result<(), io::Error>> {
+        let handle = Handle::current();
+        let result = handle.block_on(self.complete_upload());
+        
         Poll::Ready(result)
     }
 }

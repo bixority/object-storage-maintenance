@@ -1,7 +1,6 @@
-use crate::tokio_to_async::TokioBufReadAsAsyncRead;
 use crate::uploader::MultipartUploadSink;
-use async_compression::futures::write::BzEncoder;
-use async_tar::{Builder, Header};
+use async_compression::tokio::write::BzEncoder;
+use tokio_tar::{Builder, Header};
 use aws_sdk_s3::primitives::DateTime;
 use aws_sdk_s3::types::{Delete, ObjectIdentifier};
 use aws_sdk_s3::Client;
@@ -115,7 +114,6 @@ pub async fn compress(
                                 match object {
                                     Ok(resp) => {
                                         let stream = resp.body.into_async_read();
-                                        let async_read = TokioBufReadAsAsyncRead::new(stream);
 
                                         let mut header = Header::new_gnu();
                                         header.set_size(size as u64);
@@ -123,7 +121,7 @@ pub async fn compress(
                                         header.set_mtime(last_modified.secs() as u64);
                                         header.set_cksum();
                                         tar_builder
-                                            .append_data(&mut header, &key, async_read)
+                                            .append_data(&mut header, &key, stream)
                                             .await
                                             .unwrap();
 
