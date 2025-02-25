@@ -5,6 +5,7 @@ use std::io;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
+use aws_sdk_s3::primitives::ByteStream;
 use tokio::io::AsyncWrite;
 use tokio::runtime::Handle;
 
@@ -37,6 +38,27 @@ impl MultipartUploadSink {
         })
     }
 
+    async fn init_multipart_upload(&mut self) -> Result<(), io::Error> {
+        let handle = Handle::current();
+        let create_multipart_upload_response = handle.block_on(
+            self.client
+                .create_multipart_upload()
+                .bucket(&self.bucket)
+                .key(&self.key)
+                .send()
+        ).unwrap();
+
+        self.upload_id = create_multipart_upload_response
+            .upload_id()
+            .map(ToString::to_string);
+
+        if self.upload_id.is_none() {
+            panic!("Something went wrong when creating multipart upload.");
+        }
+
+        Ok(())
+    }
+
     async fn complete_multipart_upload(&mut self, upload_id: String) -> Result<(), io::Error> {
         if !self.buffer.is_empty() {
             // self.upload_part().await?;
@@ -49,7 +71,7 @@ impl MultipartUploadSink {
             .upload_id(upload_id)
             .multipart_upload(
                 aws_sdk_s3::types::CompletedMultipartUpload::builder()
-                    .set_parts(Some(self.completed_parts.clone()))
+                    .set_parts(Some(self.completed_parts.to_owned()))
                     .build(),
             )
             .send()
@@ -64,7 +86,7 @@ impl MultipartUploadSink {
             .put_object()
             .bucket(&self.bucket)
             .key(&self.key)
-            .body(self.buffer.clone().into())
+            .body(self.buffer.to_owned().into())
             .send()
             .await
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
@@ -93,6 +115,32 @@ impl AsyncWrite for MultipartUploadSink {
         buf: &[u8],
     ) -> Poll<Result<usize, io::Error>> {
         self.buffer.extend_from_slice(buf);
+
+        if self.buffer.len() >= BUFFER_SIZE {
+            let handle = Handle::current();
+
+            if self.part_number == 0 {
+                handle
+                    .block_on(self.init_multipart_upload())
+                    .expect("Failed to init multipart upload");
+            }
+
+            let chunk: Vec<u8> = self.buffer.drain(..BUFFER_SIZE).collect();
+            let body = ByteStream::from(chunk);
+            self.part_number += 1;
+
+            let _upload_part_response = handle.block_on(
+                self.client
+                    .upload_part()
+                    .bucket(&self.bucket)
+                    .key(&self.key)
+                    .upload_id(self.upload_id)
+                    .part_number(self.part_number)
+                    .body(body)
+                    .send()
+            );
+        }
+
         Poll::Ready(Ok(buf.len()))
     }
 
@@ -101,9 +149,8 @@ impl AsyncWrite for MultipartUploadSink {
     }
 
     fn poll_shutdown(mut self: Pin<&mut Self>, _: &mut Context) -> Poll<Result<(), io::Error>> {
-        let handle = Handle::current();
-        let result = handle.block_on(self.complete_upload());
-        
+        let result = Handle::current().block_on(self.complete_upload());
+
         Poll::Ready(result)
     }
 }
