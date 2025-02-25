@@ -1,31 +1,7 @@
 use aws_sdk_s3::config::Credentials;
-use aws_sdk_s3::error::SdkError;
-use aws_sdk_s3::operation::get_object::GetObjectError;
-use aws_sdk_s3::operation::list_objects_v2::ListObjectsV2Error;
-use aws_sdk_s3::primitives::ByteStreamError;
 use aws_sdk_s3::{Client, Config};
 use aws_types::region::Region;
-use std::error::Error;
-use std::{env, fmt};
-
-#[derive(Debug)]
-pub enum S3Error {
-    ListObjectsError(SdkError<ListObjectsV2Error>),
-    GetObjectError(SdkError<GetObjectError>),
-    ByteStreamError(ByteStreamError),
-}
-
-impl fmt::Display for S3Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            S3Error::ListObjectsError(e) => write!(f, "ListObjectsV2 error: {}", e),
-            S3Error::GetObjectError(e) => write!(f, "GetObject error: {}", e),
-            S3Error::ByteStreamError(e) => write!(f, "ByteStream error: {}", e),
-        }
-    }
-}
-
-impl Error for S3Error {}
+use std::env;
 
 pub struct S3Params {
     region: String,

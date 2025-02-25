@@ -1,10 +1,12 @@
 mod commands;
+mod compressor;
+mod helpers;
 mod object_storage;
 mod s3;
 mod uploader;
-mod tokio_to_async;
 
 use crate::commands::archive;
+use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 use std::error::Error;
 use std::io;
@@ -14,16 +16,16 @@ use std::io::Write;
 enum Commands {
     Archive {
         #[arg(long)]
-        src_bucket: String,
+        src: String,
 
         #[arg(long)]
-        src_prefix: String,
+        dst: String,
 
         #[arg(long)]
-        dst_bucket: String,
+        cutoff: Option<DateTime<Utc>>,
 
-        #[arg(long)]
-        dst_prefix: String,
+        #[arg(long, default_value_t = 100 * 1024 * 1024)] // 100MB
+        buffer: usize,
     },
 }
 
@@ -40,13 +42,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     match args.command {
         Some(Commands::Archive {
-            src_bucket,
-            src_prefix,
-            dst_bucket,
-            dst_prefix,
+            src,
+            dst,
+            cutoff,
+            buffer,
         }) => {
-            if let Err(e) = archive(src_bucket, src_prefix, dst_bucket, dst_prefix).await {
-                eprintln!("Error running 'archive' command: {}", e);
+            if let Err(e) = archive(src, dst, cutoff, buffer).await {
+                eprintln!("Error running 'archive' command: {e}");
             }
         }
         None => {
