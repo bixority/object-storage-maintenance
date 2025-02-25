@@ -77,7 +77,7 @@ pub async fn compress(
     let src_bucket_str = src_bucket.as_str();
     let dst_object_key = dst_prefix + "archive.tar.bz2";
 
-    let sink = MultipartUploadSink::new(dst_client, dst_bucket, dst_object_key).await?;
+    let sink = MultipartUploadSink::new(dst_client, dst_bucket, dst_object_key);
     let bz2_encoder = BzEncoder::new(sink);
     let mut tar_builder = Builder::new(bz2_encoder);
 
