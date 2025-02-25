@@ -129,16 +129,18 @@ impl AsyncWrite for MultipartUploadSink {
             let body = ByteStream::from(chunk);
             self.part_number += 1;
 
-            let _upload_part_response = handle.block_on(
-                self.client
-                    .upload_part()
-                    .bucket(&self.bucket)
-                    .key(&self.key)
-                    .upload_id(self.upload_id)
-                    .part_number(self.part_number)
-                    .body(body)
-                    .send()
-            );
+            if let Some(upload_id) = &self.upload_id {
+                let _upload_part_response = handle.block_on(
+                    self.client
+                        .upload_part()
+                        .bucket(&self.bucket)
+                        .key(&self.key)
+                        .upload_id(upload_id)
+                        .part_number(self.part_number)
+                        .body(body)
+                        .send()
+                );
+            }
         }
 
         Poll::Ready(Ok(buf.len()))
