@@ -27,17 +27,6 @@ pub async fn archive(
         }
     };
 
-    let dst_object_key = match &dst_prefix {
-        Some(prefix) => {
-            if prefix.ends_with('/') {
-                format!("{}archive.tar.bz2", prefix)
-            } else {
-                format!("{}/archive.tar.bz2", prefix)
-            }
-        }
-        None => "archive.tar.bz2".to_string(),
-    };
-
     let s3_params = get_s3_params();
     let src_client = get_client(&s3_params);
     let dst_client = get_client(&s3_params);
@@ -47,6 +36,18 @@ pub async fn archive(
         now - Duration::seconds(1)
     });
     let cutoff_aws_dt = DateTime::from_secs(cutoff_dt.timestamp());
+    let cutoff_str = format!("{}", cutoff_dt.format("%Y%m%d_%H%M%S"));
+
+    let dst_object_key = match &dst_prefix {
+        Some(prefix) => {
+            if prefix.ends_with('/') {
+                format!("{}archive_{cutoff_str}.tar.bz2", prefix)
+            } else {
+                format!("{}/archive_{cutoff_str}.tar.bz2", prefix)
+            }
+        }
+        None => "archive.tar.bz2".to_string(),
+    };
 
     let mut archived_keys: Vec<String> = Vec::new();
 
