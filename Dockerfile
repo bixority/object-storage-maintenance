@@ -1,7 +1,7 @@
 FROM rust:latest AS build-image
 LABEL authors="Bixority SIA"
 
-ARG upx_version=4.2.4
+ARG upx_version=5.0.0
 ARG TARGETARCH=${TARGETARCH:-amd64}
 
 WORKDIR /build
