@@ -42,6 +42,19 @@ make release
 The binary will be located at `target/release/object-storage-maintenance`.
 
 ## Usage
+Set the environment variables for S3 client:
+```dotenv
+AWS_REGION="eu-north-1"
+AWS_ACCESS_KEY=
+AWS_SECRET_KEY=
+```
+Note: `AWS_REGION` defaults to `us-east-1`.
+
+Set the object storage endpoint if you are using a non-standard S3 storage location:
+```dotenv
+OBJECT_STORAGE_ENDPOINT="https://my-storage.company.com:9000"
+```
+
 Run the tool with the `archive` command to move and compress objects:
 
 ```shell
