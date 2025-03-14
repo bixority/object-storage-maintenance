@@ -56,6 +56,7 @@ jobs:
             ${{ steps.set-outputs.outputs.image }}
           tags: |
             type=raw,value=${{ steps.extract_tag.outputs.tag }}
+#            type=raw,value=latest
 
     outputs:
       image: ${{ steps.set-outputs.outputs.image }}
@@ -74,7 +75,7 @@ jobs:
       matrix:
         platform:
           - linux/amd64
-#          - linux/arm64
+          - linux/arm64
     permissions:
       contents: read
       packages: write
@@ -157,7 +158,7 @@ jobs:
       - name: Upload digest
         uses: actions/upload-artifact@v4
         with:
-          name: digests
+          name: digests-${{ strategy.job-index }}
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
@@ -174,7 +175,8 @@ jobs:
       - name: Download digests
         uses: actions/download-artifact@v4
         with:
-          name: digests
+          pattern: digests-*
+          merge-multiple: true
           path: /tmp/digests
 
       - name: Set up Docker Buildx
@@ -194,6 +196,7 @@ jobs:
         run: |
           docker buildx imagetools create $(jq -r '"-t " + (.tags | join(" -t "))' <<< '${{ needs.prepare.outputs.meta-json }}') \
             $(printf '${{ needs.prepare.outputs.image }}@sha256:%s ' *)
+#          docker buildx imagetools create -t ${{ needs.prepare.outputs.image }}:latest $(printf '${{ needs.prepare.outputs.image }}@sha256:%s ' *)
 
       - name: Inspect image
         if: needs.prepare.outputs.push == 'true'

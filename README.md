@@ -81,6 +81,16 @@ best practice to use multipart upload for objects that are 100 MB or larger inst
 operation.
 - If cutoff is not being passed - all the objects will be archived.
 
+### Run in a container
+```shell
+docker run --rm --env-file .env ghcr.io/bixority/object-storage-maintenance:v0.0.2 \
+    archive \
+    --src s3://project/audit/ \
+    --dst s3://archive/audit/ \
+    --cutoff 2025-01-01T00:00:00+00:00 \
+    --buffer 104857600
+```
+There is intentionally no `:latest` tag so there are no surprises after seamless upgrade.
 
 ## Example Use Case
 Imagine you have **millions of tiny log files** stored in `s3://project/audit/`:
@@ -92,7 +102,7 @@ After running the tool, the **tar.bz2 archive** is stored in `s3://archive/audit
 costs.
 
 ## License
-GPLv3 License. See `LICENSE` for details.
+GPL-3.0 License. See `LICENSE` for details.
 
 ## Contributing
 Feel free to submit issues and pull requests!

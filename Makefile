@@ -1,12 +1,14 @@
-OUTPUT := ./target/x86_64-unknown-linux-musl/release/object-storage-maintenance
+RUST_TARGETARCH ?= x86_64
+TARGET_DIR := ./target
+OUTPUT := $(TARGET_DIR)/$(RUST_TARGETARCH)-unknown-linux-musl/release/object-storage-maintenance
 
 # Default target: build the application
 all: build
 
 # Build the static binary
 build:
-	rustup target add x86_64-unknown-linux-musl
-	RUSTFLAGS='-C relocation-model=static -C strip=symbols' cargo build --release --target x86_64-unknown-linux-musl
+	rustup target add $(RUST_TARGETARCH)-unknown-linux-musl
+	RUSTFLAGS='-C relocation-model=static -C strip=symbols' cargo build --release --target $(RUST_TARGETARCH)-unknown-linux-musl --target-dir $(TARGET_DIR)
 
 # Compress the binary with UPX
 compress: build
@@ -15,6 +17,7 @@ compress: build
 
 # Build and compress for release
 release: build compress
+	cp $(OUTPUT) $(TARGET_DIR)/
 
 # Run the application
 run: build
