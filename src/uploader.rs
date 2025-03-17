@@ -139,7 +139,7 @@ impl MultipartUploadSink {
         self.state = UploadState::UploadingPart(future);
     }
 
-    fn start_complete_upload(&mut self) {
+    fn start_complete_multipart_upload(&mut self) {
         println!("Completing multipart upload.");
 
         if self.multipart_upload_id.is_none() {
@@ -195,6 +195,53 @@ impl MultipartUploadSink {
         }
     }
 
+    fn start_regular_upload(&mut self) {
+        println!("Performing a regular object upload.");
+
+        let client = Arc::clone(&self.client);
+        let bucket = self.bucket.clone();
+        let key = self.key.clone();
+        let body = ByteStream::from(self.buffer.drain(..).collect::<Vec<u8>>());
+
+        let future = async move {
+            println!("Starting regular object upload future.");
+
+            client
+                .put_object()
+                .bucket(&bucket)
+                .key(&key)
+                .body(body)
+                .send()
+                .await
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
+
+            println!("Regular object upload future ended");
+
+            Ok(())
+        }
+        .boxed();
+
+        self.state = UploadState::CompletingUpload(future);
+
+        println!("Regular object upload initiated.");
+    }
+
+    fn start_complete_upload(&mut self) {
+        if self.multipart_upload_id.is_none() {
+            println!("Multipart upload ID is not set, trying regular object upload.");
+
+            if !self.buffer.is_empty() {
+                self.start_regular_upload();
+            } else {
+                println!("Buffer is empty. Skipping regular object upload.");
+            }
+        } else {
+            println!("Multipart upload ID is set, trying to complete a multipart upload.");
+
+            self.start_complete_multipart_upload();
+        }
+    }
+
     fn poll_state(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), io::Error>> {
         // println!("poll_state: current state = {:?}", self.state);
 
@@ -236,7 +283,7 @@ impl MultipartUploadSink {
                 },
                 UploadState::CompletingUpload(future) => match future.as_mut().poll(cx) {
                     Poll::Ready(Ok(())) => {
-                        println!("Multipart upload completed successfully!");
+                        println!("Upload completed successfully!");
 
                         self.state = UploadState::Completed;
 
