@@ -40,6 +40,12 @@ struct Args {
 async fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
 
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .dns_resolver(trust_dns_resolver::TokioAsyncResolver::tokio_from_system_conf().unwrap())
+        .build()
+        .unwrap();
+
     match args.command {
         Some(Commands::Archive {
             src,
