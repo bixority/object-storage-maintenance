@@ -85,9 +85,13 @@ pub async fn compress(
                 continuation_token = response.next_continuation_token;
             }
             Err(e) => {
-                eprintln!("Failed to list objects: {e}");
+                eprintln!("Failed to list objects: {:?}", e);
 
-                break;
+                if let Some(source) = e.source() {
+                    eprintln!("Caused by: {:?}", source);
+                }
+                
+                panic!("Detailed error: {:#?}", e);
             }
         }
     }
@@ -97,10 +101,14 @@ pub async fn compress(
 
     if let Err(e) = bz2_encoder.flush().await {
         eprintln!("BZ2 encoder flush failed: {:?}", e);
+        
+        return Err(e.into());
     }
 
     if let Err(e) = bz2_encoder.shutdown().await {
         eprintln!("BZ2 encoder shutdown failed: {:?}", e);
+
+        return Err(e.into());
     }
 
     Ok(())
