@@ -31,14 +31,7 @@ pub fn get_s3_params() -> S3Params {
 pub fn get_client(params: &S3Params) -> Client {
     let dns_http_connector = TrustDnsResolver::default().into_http_connector();
 
-    let https_connector = hyper_rustls::HttpsConnectorBuilder::new()
-        .with_webpki_roots()
-        .https_or_http()
-        .enable_http1()
-        .enable_http2()
-        .wrap_connector(dns_http_connector);
-
-    let http_client = HyperClientBuilder::new().build(https_connector);
+    let http_client = HyperClientBuilder::new().build(dns_http_connector);
 
     let mut builder = Config::builder()
         .http_client(http_client)
