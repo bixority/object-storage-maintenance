@@ -12,6 +12,9 @@ use std::error::Error;
 use std::io;
 use std::io::Write;
 
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 #[derive(Subcommand, Debug)]
 enum Commands {
     Archive {
@@ -39,12 +42,6 @@ struct Args {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
-
-    tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .dns_resolver(trust_dns_resolver::TokioAsyncResolver::tokio_from_system_conf().unwrap())
-        .build()
-        .unwrap();
 
     match args.command {
         Some(Commands::Archive {
