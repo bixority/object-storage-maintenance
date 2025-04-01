@@ -1,8 +1,11 @@
 use aws_sdk_s3::config::Credentials;
 use aws_sdk_s3::{Client, Config};
-use aws_smithy_http_client::hyper_014::HyperClientBuilder;
+use aws_smithy_http_client::tls::rustls_provider::CryptoMode;
+use aws_smithy_http_client::{tls, Builder};
 use aws_types::region::Region;
-use hyper_trust_dns::TrustDnsResolver;
+use hickory_resolver::config::ResolverConfig;
+use hickory_resolver::name_server::TokioConnectionProvider;
+use hickory_resolver::TokioResolver;
 use std::env;
 
 pub struct S3Params {
@@ -29,9 +32,13 @@ pub fn get_s3_params() -> S3Params {
 }
 
 pub fn get_client(params: &S3Params) -> Client {
-    let dns_http_connector = TrustDnsResolver::default().into_http_connector();
-
-    let http_client = HyperClientBuilder::new().build(dns_http_connector);
+    let resolver = TokioResolver::builder_with_config(
+        ResolverConfig::default(),
+        TokioConnectionProvider::default(),
+    );
+    let http_client = Builder::new()
+        .tls_provider(tls::Provider::Rustls(CryptoMode::AwsLc))
+        .build_with_resolver(resolver);
 
     let mut builder = Config::builder()
         .http_client(http_client)
