@@ -39,7 +39,7 @@ pub async fn delete_keys(
             Ok(response) => {
                 let deleted_objects = response.deleted();
                 if !deleted_objects.is_empty() {
-                    println!("Successfully deleted objects: {:?}", deleted_objects);
+                    println!("Successfully deleted {:?} objects.", deleted_objects.len());
                 }
 
                 let errors = response.errors();
