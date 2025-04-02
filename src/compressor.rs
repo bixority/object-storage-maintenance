@@ -4,6 +4,7 @@ use aws_sdk_s3::primitives::DateTime;
 use aws_sdk_s3::Client;
 use std::error::Error;
 use std::sync::Arc;
+use async_compression::Level;
 use tokio::io::AsyncWriteExt;
 use tokio_tar::{Builder, Header};
 
@@ -20,7 +21,7 @@ pub async fn compress(
 ) -> Result<(), Box<dyn Error>> {
     let src_bucket_str = src_bucket.as_str();
     let sink = MultipartUploadSink::new(dst_client, dst_bucket, dst_object_key, buffer_size);
-    let bz2_encoder = BzEncoder::new(sink);
+    let bz2_encoder = BzEncoder::with_quality(sink, Level::Best);
     let mut tar_builder = Builder::new(bz2_encoder);
     let mut continuation_token = None;
 
