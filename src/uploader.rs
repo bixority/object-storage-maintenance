@@ -230,10 +230,10 @@ impl MultipartUploadSink {
         if self.multipart_upload_id.is_none() {
             println!("Multipart upload ID is not set, trying regular object upload.");
 
-            if !self.buffer.is_empty() {
-                self.start_regular_upload();
-            } else {
+            if self.buffer.is_empty() {
                 println!("Buffer is empty. Skipping regular object upload.");
+            } else {
+                self.start_regular_upload();
             }
         } else {
             println!("Multipart upload ID is set, trying to complete a multipart upload.");

@@ -1,10 +1,10 @@
 use crate::uploader::MultipartUploadSink;
+use async_compression::Level;
 use async_compression::tokio::write::BzEncoder;
-use aws_sdk_s3::primitives::DateTime;
 use aws_sdk_s3::Client;
+use aws_sdk_s3::primitives::DateTime;
 use std::error::Error;
 use std::sync::Arc;
-use async_compression::Level;
 use tokio::io::AsyncWriteExt;
 use tokio_tar::{Builder, Header};
 
@@ -39,7 +39,7 @@ pub async fn compress(
         match request.send().await {
             Ok(response) => {
                 if let Some(contents) = response.contents {
-                    for obj in contents.into_iter() {
+                    for obj in contents {
                         if obj.last_modified < Some(cutoff_aws_dt) {
                             if let Some(key) = obj.key {
                                 let Some(last_modified) = obj.last_modified else {
@@ -59,9 +59,17 @@ pub async fn compress(
                                         let stream = resp.body.into_async_read();
 
                                         let mut header = Header::new_gnu();
-                                        header.set_size(size as u64);
+                                        header.set_size(
+                                            size.try_into()
+                                                .expect("object size must be non-negative"),
+                                        );
                                         header.set_mode(0o644);
-                                        header.set_mtime(last_modified.secs() as u64);
+                                        header.set_mtime(
+                                            last_modified
+                                                .secs()
+                                                .try_into()
+                                                .expect("mtime must be non-negative"),
+                                        );
                                         header.set_cksum();
                                         tar_builder
                                             .append_data(&mut header, &key, stream)
@@ -86,13 +94,13 @@ pub async fn compress(
                 continuation_token = response.next_continuation_token;
             }
             Err(e) => {
-                eprintln!("Failed to list objects: {:?}", e);
+                eprintln!("Failed to list objects: {e:?}");
 
                 if let Some(source) = e.source() {
-                    eprintln!("Caused by: {:?}", source);
+                    eprintln!("Caused by: {source:?}");
                 }
-                
-                panic!("Detailed error: {:#?}", e);
+
+                panic!("Detailed error: {e:#?}");
             }
         }
     }
@@ -101,13 +109,13 @@ pub async fn compress(
     let mut bz2_encoder = tar_builder.into_inner().await.unwrap();
 
     if let Err(e) = bz2_encoder.flush().await {
-        eprintln!("BZ2 encoder flush failed: {:?}", e);
-        
+        eprintln!("BZ2 encoder flush failed: {e:?}");
+
         return Err(e.into());
     }
 
     if let Err(e) = bz2_encoder.shutdown().await {
-        eprintln!("BZ2 encoder shutdown failed: {:?}", e);
+        eprintln!("BZ2 encoder shutdown failed: {e:?}");
 
         return Err(e.into());
     }

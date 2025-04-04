@@ -16,14 +16,12 @@ pub fn get_s3_params() -> S3Params {
     let access_key = env::var("AWS_ACCESS_KEY").expect("AWS_ACCESS_KEY must be set");
     let secret_key = env::var("AWS_SECRET_KEY").expect("AWS_SECRET_KEY must be set");
 
-    let params = S3Params {
+    S3Params {
         region,
         access_key,
         secret_key,
         endpoint,
-    };
-
-    params
+    }
 }
 
 pub fn get_client(params: &S3Params) -> Client {
@@ -43,7 +41,6 @@ pub fn get_client(params: &S3Params) -> Client {
     }
 
     let config = builder.build();
-    let client = Client::from_conf(config);
-
-    client
+    
+    Client::from_conf(config)
 }

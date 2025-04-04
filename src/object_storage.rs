@@ -44,7 +44,7 @@ pub async fn delete_keys(
 
                 let errors = response.errors();
                 if !errors.is_empty() {
-                    eprintln!("Failed to delete some objects: {:?}", errors);
+                    eprintln!("Failed to delete some objects: {errors:?}");
                 }
             }
             Err(e) => {

@@ -13,19 +13,13 @@ pub async fn archive(
     cutoff: Option<ChronoDateTime<Utc>>,
     buffer_size: usize,
 ) -> Result<(), Box<dyn Error>> {
-    let (src_bucket, src_prefix) = match parse_url(&src) {
-        Some(values) => values,
-        None => {
+    let Some((src_bucket, src_prefix)) = parse_url(&src) else {
             panic!("Invalid source URL");
-        }
-    };
+        };
 
-    let (dst_bucket, dst_prefix) = match parse_url(&dst) {
-        Some(values) => values,
-        None => {
+    let Some((dst_bucket, dst_prefix)) = parse_url(&dst) else {
             panic!("Invalid destination URL");
-        }
-    };
+        };
 
     let s3_params = get_s3_params();
     let src_client = get_client(&s3_params);
@@ -41,9 +35,9 @@ pub async fn archive(
     let dst_object_key = match &dst_prefix {
         Some(prefix) => {
             if prefix.ends_with('/') {
-                format!("{}archive_{cutoff_str}.tar.bz2", prefix)
+                format!("{prefix}archive_{cutoff_str}.tar.bz2")
             } else {
-                format!("{}/archive_{cutoff_str}.tar.bz2", prefix)
+                format!("{prefix}/archive_{cutoff_str}.tar.bz2")
             }
         }
         None => "archive.tar.bz2".to_string(),
