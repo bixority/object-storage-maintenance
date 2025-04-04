@@ -9,8 +9,8 @@ use crate::commands::archive;
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 use std::error::Error;
-use std::{fs, io};
 use std::io::Write;
+use std::io;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -42,11 +42,6 @@ struct Args {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
-
-    match fs::read_to_string("/etc/resolv.conf") {
-        Ok(contents) => println!("Contents of /etc/resolv.conf:\n{contents}"),
-        Err(e) => eprintln!("Failed to read /etc/resolv.conf: {e}"),
-    }
 
     match args.command {
         Some(Commands::Archive {
