@@ -41,6 +41,6 @@ pub fn get_client(params: &S3Params) -> Client {
     }
 
     let config = builder.build();
-    
+
     Client::from_conf(config)
 }

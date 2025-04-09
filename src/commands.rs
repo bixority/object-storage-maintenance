@@ -14,12 +14,12 @@ pub async fn archive(
     buffer_size: usize,
 ) -> Result<(), Box<dyn Error>> {
     let Some((src_bucket, src_prefix)) = parse_url(&src) else {
-            panic!("Invalid source URL");
-        };
+        panic!("Invalid source URL");
+    };
 
     let Some((dst_bucket, dst_prefix)) = parse_url(&dst) else {
-            panic!("Invalid destination URL");
-        };
+        panic!("Invalid destination URL");
+    };
 
     let s3_params = get_s3_params();
     let src_client = get_client(&s3_params);

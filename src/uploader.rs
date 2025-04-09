@@ -348,9 +348,7 @@ impl AsyncWrite for MultipartUploadSink {
             } else {
                 println!("Upload state is not idle, skipping part upload");
             }
-        }/* else {
-            println!("Buffer is empty or multipart upload is not started, skipping part upload");
-        }*/
+        }
 
         self.poll_state(cx)
     }
