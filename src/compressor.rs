@@ -1,5 +1,5 @@
 use crate::uploader::MultipartUploadSink;
-use async_compression::tokio::write::BzEncoder;
+use async_compression::tokio::write::XzEncoder;
 use async_compression::Level;
 use aws_sdk_s3::operation::get_object::GetObjectOutput;
 use aws_sdk_s3::primitives::DateTime;
@@ -15,7 +15,7 @@ async fn compress_object(
     size: i64,
     last_modified: DateTime,
     key: String,
-    tar_builder: &mut Builder<BzEncoder<MultipartUploadSink>>,
+    tar_builder: &mut Builder<XzEncoder<MultipartUploadSink>>,
     processed_keys: &mut Vec<String>,
 ) {
     let stream = resp.body.into_async_read();
@@ -43,7 +43,7 @@ async fn process_object(
     cutoff_aws_dt: DateTime,
     src_client: Arc<Client>,
     src_bucket_str: &str,
-    tar_builder: &mut Builder<BzEncoder<MultipartUploadSink>>,
+    tar_builder: &mut Builder<XzEncoder<MultipartUploadSink>>,
     processed_keys: &mut Vec<String>,
 ) {
     if obj.last_modified < Some(cutoff_aws_dt) {
@@ -78,7 +78,7 @@ async fn process_objects(
     src_bucket_str: &str,
     src_prefix: Option<String>,
     cutoff_aws_dt: DateTime,
-    tar_builder: &mut Builder<BzEncoder<MultipartUploadSink>>,
+    tar_builder: &mut Builder<XzEncoder<MultipartUploadSink>>,
     processed_keys: &mut Vec<String>,
 ) {
     let mut continuation_token = None;
@@ -142,8 +142,8 @@ pub async fn compress(
 ) -> Result<(), Box<dyn Error>> {
     let src_bucket_str = src_bucket.as_str();
     let sink = MultipartUploadSink::new(dst_client, dst_bucket, dst_object_key, buffer_size);
-    let bz2_encoder = BzEncoder::with_quality(sink, Level::Best);
-    let mut tar_builder = Builder::new(bz2_encoder);
+    let xz2_encoder = XzEncoder::with_quality(sink, Level::Best);
+    let mut tar_builder = Builder::new(xz2_encoder);
 
     process_objects(
         src_client,
@@ -156,16 +156,16 @@ pub async fn compress(
     .await;
 
     tar_builder.finish().await.unwrap();
-    let mut bz2_encoder = tar_builder.into_inner().await.unwrap();
+    let mut encoder = tar_builder.into_inner().await.unwrap();
 
-    if let Err(e) = bz2_encoder.flush().await {
-        eprintln!("BZ2 encoder flush failed: {e:?}");
+    if let Err(e) = encoder.flush().await {
+        eprintln!("Encoder flush failed: {e:?}");
 
         return Err(e.into());
     }
 
-    if let Err(e) = bz2_encoder.shutdown().await {
-        eprintln!("BZ2 encoder shutdown failed: {e:?}");
+    if let Err(e) = encoder.shutdown().await {
+        eprintln!("Encoder shutdown failed: {e:?}");
 
         return Err(e.into());
     }

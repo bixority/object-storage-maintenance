@@ -35,12 +35,12 @@ pub async fn archive(
     let dst_object_key = match &dst_prefix {
         Some(prefix) => {
             if prefix.ends_with('/') {
-                format!("{prefix}archive_{cutoff_str}.tar.bz2")
+                format!("{prefix}archive_{cutoff_str}.tar.xz2")
             } else {
-                format!("{prefix}/archive_{cutoff_str}.tar.bz2")
+                format!("{prefix}/archive_{cutoff_str}.tar.xz2")
             }
         }
-        None => "archive.tar.bz2".to_string(),
+        None => "archive.tar.xz2".to_string(),
     };
 
     let mut archived_keys: Vec<String> = Vec::new();
