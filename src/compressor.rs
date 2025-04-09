@@ -142,8 +142,8 @@ pub async fn compress(
 ) -> Result<(), Box<dyn Error>> {
     let src_bucket_str = src_bucket.as_str();
     let sink = MultipartUploadSink::new(dst_client, dst_bucket, dst_object_key, buffer_size);
-    let xz2_encoder = XzEncoder::with_quality(sink, Level::Best);
-    let mut tar_builder = Builder::new(xz2_encoder);
+    let encoder = XzEncoder::with_quality(sink, Level::Best);
+    let mut tar_builder = Builder::new(encoder);
 
     process_objects(
         src_client,

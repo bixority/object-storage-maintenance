@@ -41,7 +41,7 @@ impl MultipartUploadSink {
             key,
             multipart_upload_id: None,
             current_part_number: 0,
-            completed_parts: Vec::new(),
+            completed_parts: Vec::with_capacity(1000),
             state: UploadState::Idle,
         }
     }
