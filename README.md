@@ -3,18 +3,18 @@
 ## Overview
 The **Object Storage Maintenance Tool** is a command-line utility designed to **archive and compress objects** stored in 
 object storage in a **streaming** manner. It helps manage storage efficiently by gathering objects older than a 
-particular date and storing them in a single **TAR** archive, optionally compressing them with **Bzip2**.
+particular date and storing them in a single **TAR** archive, optionally compressing them with **XZ**.
 
 ### Why Use This Tool?
 In object storage environments, a large number of small objects (e.g., audit logs, event records) can lead to 
 inefficient storage use. For example:
 - Many objects are **tiny (100 bytes or even 0 bytes)** but still occupy **4KB** due to storage overhead.
 - Storing such objects as a **TAR archive** reduces storage overhead.
-- Compressing the archive with **Bzip2** further optimizes storage usage.
+- Compressing the archive with **XZ** further optimizes storage usage.
 
 ## Features
 - **Archive Objects**: Consolidates multiple objects into a single **TAR** file.
-- **Streaming Compression**: Uses **Bzip2** to reduce storage footprint.
+- **Streaming Compression**: Uses **XZ** to reduce storage footprint.
 - **Efficient Storage Management**: Helps save costs by reducing wasted space.
 - **S3-Compatible**: Works with AWS S3 compatible object storages.
 
@@ -96,9 +96,9 @@ There is intentionally no `:latest` tag so there are no surprises after seamless
 Imagine you have **millions of tiny log files** stored in `s3://project/audit/`:
 - Each object is **100 bytes** but takes **4KB**.
 - You can **archive them into a single TAR file**.
-- **Compress the archive with Bzip2** to save additional space.
+- **Compress the archive with XZ** to save additional space.
 
-After running the tool, the **tar.bz2 archive** is stored in `s3://archive/audit/`, significantly reducing storage
+After running the tool, the **tar.xz archive** is stored in `s3://archive/audit/`, significantly reducing storage
 costs.
 
 ## License
