@@ -15,6 +15,69 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        build: [ stable, beta, nightly, msrv, macos, win32, win64, win32-gnu, win64-gnu ]
+        include:
+          - build: stable
+            os: ubuntu-latest
+            rust: stable
+          - build: beta
+            os: ubuntu-latest
+            rust: beta
+          - build: nightly
+            os: ubuntu-latest
+            rust: nightly
+          - build: msrv
+            os: ubuntu-latest
+            rust: nightly
+          - build: macos
+            os: macos-latest
+            rust: stable
+          - build: win32
+            os: windows-latest
+            rust: stable-i686-msvc
+          - build: win64
+            os: windows-latest
+            rust: stable-x86_64-msvc
+          - build: win32-gnu
+            os: windows-latest
+            rust: stable-i686-gnu
+          - build: win64-gnu
+            os: windows-latest
+            rust: stable-x86_64-gnu
+    steps:
+      - uses: actions/checkout@master
+      - name: Install Rust (rustup)
+        run: rustup update ${{ matrix.rust }} --no-self-update && rustup default ${{ matrix.rust }}
+        shell: bash
+        if: matrix.build != 'msrv'
+      - name: Configure Toolchain (msrv)
+        run: |
+          # extract the MSRV from the Cargo.toml's `rust-version`
+          MSRV=$(awk -F'"' '/rust-version/ {print $2}' Cargo.toml)
+          TOOLCHAIN="${MSRV}-x86_64-unknown-linux-gnu"
+          rustup update $TOOLCHAIN --no-self-update && rustup default $TOOLCHAIN
+        shell: bash
+        if: matrix.build == 'msrv'
+      - name: Run cargo test
+        run: cargo test
+
+  rustfmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Install Rust
+        run: rustup update stable && rustup default stable && rustup component add rustfmt clippy
+      - name: Rustfmt
+        run: cargo fmt -- --check
+      - name: Clippy
+        run: cargo clippy -- -D warnings
+
   prepare:
     runs-on: ubuntu-latest
     permissions:
