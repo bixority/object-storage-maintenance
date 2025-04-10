@@ -106,7 +106,7 @@ async fn process_objects(
                             tar_builder,
                             processed_keys,
                         )
-                            .await;
+                        .await;
                     }
                 }
 
@@ -154,7 +154,7 @@ pub async fn compress(
         &mut tar_builder,
         processed_keys,
     )
-        .await;
+    .await;
 
     tar_builder.finish().await.unwrap();
     let mut encoder = tar_builder.into_inner().await.unwrap();
