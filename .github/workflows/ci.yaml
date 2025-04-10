@@ -55,6 +55,9 @@ jobs:
         run: cargo clippy -- -D warnings
 
   prepare:
+    needs:
+      - test
+      - rustfmt
     runs-on: ubuntu-latest
     permissions:
       contents: read
