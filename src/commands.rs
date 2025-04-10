@@ -2,6 +2,7 @@ use crate::compressor::compress;
 use crate::helpers::parse_url;
 use crate::object_storage::delete_keys;
 use crate::s3::{get_client, get_s3_params};
+use async_compression::Level;
 use aws_sdk_s3::primitives::DateTime;
 use chrono::{DateTime as ChronoDateTime, Duration, Utc};
 use std::error::Error;
@@ -12,6 +13,7 @@ pub async fn archive(
     dst: String,
     cutoff: Option<ChronoDateTime<Utc>>,
     buffer_size: usize,
+    level: Level,
 ) -> Result<(), Box<dyn Error>> {
     let Some((src_bucket, src_prefix)) = parse_url(&src) else {
         panic!("Invalid source URL");
@@ -54,6 +56,7 @@ pub async fn archive(
         dst_object_key,
         cutoff_aws_dt,
         buffer_size,
+        level,
         &mut archived_keys,
     )
     .await

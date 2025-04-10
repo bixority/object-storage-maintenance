@@ -139,11 +139,12 @@ pub async fn compress(
     dst_object_key: String,
     cutoff_aws_dt: DateTime,
     buffer_size: usize,
+    level: Level,
     processed_keys: &mut Vec<String>,
 ) -> Result<(), Box<dyn Error>> {
     let src_bucket_str = src_bucket.as_str();
     let sink = MultipartUploadSink::new(dst_client, dst_bucket, dst_object_key, buffer_size);
-    let encoder = XzEncoder::with_quality(sink, Level::Best);
+    let encoder = XzEncoder::with_quality(sink, level);
     let mut tar_builder = Builder::new(encoder);
 
     process_objects(
