@@ -1,5 +1,5 @@
-use aws_sdk_s3::types::{Delete, ObjectIdentifier};
 use aws_sdk_s3::Client;
+use aws_sdk_s3::types::{Delete, ObjectIdentifier};
 use std::sync::Arc;
 
 pub async fn delete_keys(

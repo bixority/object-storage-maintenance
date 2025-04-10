@@ -1,10 +1,10 @@
 use crate::uploader::MultipartUploadSink;
-use async_compression::tokio::write::XzEncoder;
 use async_compression::Level;
+use async_compression::tokio::write::XzEncoder;
+use aws_sdk_s3::Client;
 use aws_sdk_s3::operation::get_object::GetObjectOutput;
 use aws_sdk_s3::primitives::DateTime;
 use aws_sdk_s3::types::Object;
-use aws_sdk_s3::Client;
 use std::error::Error;
 use std::sync::Arc;
 use tokio::io::AsyncWriteExt;

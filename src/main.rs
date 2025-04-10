@@ -9,8 +9,8 @@ use crate::commands::archive;
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
 use std::error::Error;
-use std::io::Write;
 use std::io;
+use std::io::Write;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
