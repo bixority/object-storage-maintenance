@@ -2,7 +2,7 @@ FROM --platform=$TARGETOS/$TARGETARCH rust:latest AS build-image
 LABEL org.opencontainers.image.description="Object storage maintenance tool"
 LABEL authors="Bixority SIA"
 
-ARG upx_version=5.0.0
+ARG upx_version=5.0.1
 ARG TARGETARCH
 ARG TARGETOS
 
