@@ -119,9 +119,7 @@ impl MultipartUploadSink {
 
             let e_tag = upload_response
                 .e_tag()
-                .ok_or_else(|| {
-                    io::Error::other("No ETag in upload part response")
-                })?
+                .ok_or_else(|| io::Error::other("No ETag in upload part response"))?
                 .to_string();
 
             println!("Part {part_number} upload future ended");
@@ -273,9 +271,7 @@ impl MultipartUploadSink {
                     }
                     Poll::Ready(Err(e)) => {
                         self.state = UploadState::Failed(e);
-                        return Poll::Ready(Err(io::Error::other(
-                            "Failed to upload part",
-                        )));
+                        return Poll::Ready(Err(io::Error::other("Failed to upload part")));
                     }
                     Poll::Pending => return Poll::Pending,
                 },
@@ -291,9 +287,7 @@ impl MultipartUploadSink {
                         Poll::Ready(Err(e)) => {
                             self.state = UploadState::Failed(e);
 
-                            Poll::Ready(Err(io::Error::other(
-                                "Failed to complete upload",
-                            )))
+                            Poll::Ready(Err(io::Error::other("Failed to complete upload")))
                         }
                         Poll::Pending => Poll::Pending,
                     };
