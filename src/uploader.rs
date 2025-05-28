@@ -66,7 +66,7 @@ impl MultipartUploadSink {
                 let result = create_response
                     .upload_id()
                     .map(ToString::to_string)
-                    .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "No upload ID received"));
+                    .ok_or_else(|| io::Error::other("No upload ID received"));
 
                 println!("Multipart upload initiation future ended");
 
@@ -120,7 +120,7 @@ impl MultipartUploadSink {
             let e_tag = upload_response
                 .e_tag()
                 .ok_or_else(|| {
-                    io::Error::new(io::ErrorKind::Other, "No ETag in upload part response")
+                    io::Error::other("No ETag in upload part response")
                 })?
                 .to_string();
 
@@ -260,8 +260,7 @@ impl MultipartUploadSink {
                     }
                     Poll::Ready(Err(e)) => {
                         self.state = UploadState::Failed(e);
-                        return Poll::Ready(Err(io::Error::new(
-                            io::ErrorKind::Other,
+                        return Poll::Ready(Err(io::Error::other(
                             "Failed to init multipart upload",
                         )));
                     }
@@ -274,8 +273,7 @@ impl MultipartUploadSink {
                     }
                     Poll::Ready(Err(e)) => {
                         self.state = UploadState::Failed(e);
-                        return Poll::Ready(Err(io::Error::new(
-                            io::ErrorKind::Other,
+                        return Poll::Ready(Err(io::Error::other(
                             "Failed to upload part",
                         )));
                     }
@@ -293,8 +291,7 @@ impl MultipartUploadSink {
                         Poll::Ready(Err(e)) => {
                             self.state = UploadState::Failed(e);
 
-                            Poll::Ready(Err(io::Error::new(
-                                io::ErrorKind::Other,
+                            Poll::Ready(Err(io::Error::other(
                                 "Failed to complete upload",
                             )))
                         }
