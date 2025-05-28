@@ -61,7 +61,7 @@ impl MultipartUploadSink {
                     .key(&key)
                     .send()
                     .await
-                    .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
+                    .map_err(|e| io::Error::other(e.to_string()))?;
 
                 let result = create_response
                     .upload_id()
@@ -115,7 +115,7 @@ impl MultipartUploadSink {
                 .body(body)
                 .send()
                 .await
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
+                .map_err(|e| io::Error::other(e.to_string()))?;
 
             let e_tag = upload_response
                 .e_tag()
@@ -177,7 +177,7 @@ impl MultipartUploadSink {
                     )
                     .send()
                     .await
-                    .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
+                    .map_err(|e| io::Error::other(e.to_string()))?;
 
                 println!("Multipart upload completion future ended");
 
@@ -213,7 +213,7 @@ impl MultipartUploadSink {
                 .body(body)
                 .send()
                 .await
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
+                .map_err(|e| io::Error::other(e.to_string()))?;
 
             println!("Regular object upload future ended");
 
