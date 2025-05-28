@@ -281,24 +281,26 @@ impl MultipartUploadSink {
                     }
                     Poll::Pending => return Poll::Pending,
                 },
-                UploadState::CompletingUpload(future) => match future.as_mut().poll(cx) {
-                    Poll::Ready(Ok(())) => {
-                        println!("Upload completed successfully!");
+                UploadState::CompletingUpload(future) => {
+                    return match future.as_mut().poll(cx) {
+                        Poll::Ready(Ok(())) => {
+                            println!("Upload completed successfully!");
 
-                        self.state = UploadState::Completed;
+                            self.state = UploadState::Completed;
 
-                        return Poll::Ready(Ok(()));
-                    }
-                    Poll::Ready(Err(e)) => {
-                        self.state = UploadState::Failed(e);
+                            Poll::Ready(Ok(()))
+                        }
+                        Poll::Ready(Err(e)) => {
+                            self.state = UploadState::Failed(e);
 
-                        return Poll::Ready(Err(io::Error::new(
-                            io::ErrorKind::Other,
-                            "Failed to complete upload",
-                        )));
-                    }
-                    Poll::Pending => return Poll::Pending,
-                },
+                            Poll::Ready(Err(io::Error::new(
+                                io::ErrorKind::Other,
+                                "Failed to complete upload",
+                            )))
+                        }
+                        Poll::Pending => Poll::Pending,
+                    };
+                }
                 UploadState::Completed => return Poll::Ready(Ok(())),
                 UploadState::Failed(e) => {
                     eprintln!("poll_state() is in failed state: {e}");
