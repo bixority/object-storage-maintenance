@@ -15,7 +15,7 @@ tokio = { version = "1.45.1", features = ["rt", "rt-multi-thread", "macros"] }
 tokio-tar = "0.3.1"
 
 [profile.release]
-#opt-level = 3
+opt-level = "z"
 debug = false
 strip = true
 lto = true
