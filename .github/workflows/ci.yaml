@@ -32,7 +32,7 @@ jobs:
             os: ubuntu-latest
             rust: nightly
           - build: macos
-            os: macos-latest
+            os: macos-15
             rust: stable
     steps:
       - uses: actions/checkout@master
