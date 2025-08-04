@@ -2,13 +2,11 @@ FROM --platform=$TARGETOS/$TARGETARCH rust:latest AS build-image
 LABEL org.opencontainers.image.description="Object storage maintenance tool"
 LABEL authors="Bixority SIA"
 
-ARG upx_version=5.0.1
+ARG upx_version=5.0.2
 ARG TARGETARCH
 ARG TARGETOS
 
 WORKDIR /build
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN apt update && apt install -y --no-install-recommends xz-utils musl-tools musl-dev && \
   curl -Ls https://github.com/upx/upx/releases/download/v${upx_version}/upx-${upx_version}-${TARGETARCH}_${TARGETOS}.tar.xz -o - | tar xvJf - -C /tmp && \
@@ -20,7 +18,8 @@ RUN apt update && apt install -y --no-install-recommends xz-utils musl-tools mus
 COPY ./ /build/
 
 # Map Docker architecture to Rust target
-RUN if [ "${TARGETARCH}" = "amd64" ]; then \
+RUN echo "Target architecture is: ${TARGETARCH}" && \
+    if [ "${TARGETARCH}" = "amd64" ]; then \
         RUST_TARGETARCH=x86_64 make release; \
     elif [ "${TARGETARCH}" = "arm64" ]; then \
         RUST_TARGETARCH=aarch64 make release; \
