@@ -8,7 +8,7 @@ ARG TARGETOS
 
 WORKDIR /build
 
-RUN apt update && apt install -y --no-install-recommends xz-utils musl-tools musl-dev && \
+RUN apt update && apt install -y --no-install-recommends xz-utils musl-tools musl-dev libssl-dev && \
   curl -Ls https://github.com/upx/upx/releases/download/v${upx_version}/upx-${upx_version}-${TARGETARCH}_${TARGETOS}.tar.xz -o - | tar xvJf - -C /tmp && \
   cp /tmp/upx-${upx_version}-${TARGETARCH}_${TARGETOS}/upx /usr/local/bin/ && \
   chmod +x /usr/local/bin/upx && \
