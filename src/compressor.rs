@@ -46,29 +46,31 @@ async fn process_object(
     tar_builder: &mut Builder<XzEncoder<MultipartUploadSink>>,
     processed_keys: &mut Vec<String>,
 ) {
-    if obj.last_modified < Some(cutoff_aws_dt) {
-        if let Some(key) = obj.key {
-            let Some(last_modified) = obj.last_modified else {
-                todo!()
-            };
-            let Some(size) = obj.size else { todo!() };
+    if obj.last_modified >= Some(cutoff_aws_dt) {
+        return
+    }
+    let Some(key) = obj.key else {
+        return
+    };
+    let Some(last_modified) = obj.last_modified else {
+        todo!()
+    };
+    let Some(size) = obj.size else { todo!() };
 
-            let object = src_client
-                .get_object()
-                .bucket(src_bucket_str)
-                .key(&key)
-                .send()
+    let object = src_client
+        .get_object()
+        .bucket(src_bucket_str)
+        .key(&key)
+        .send()
+        .await;
+
+    match object {
+        Ok(resp) => {
+            compress_object(resp, size, last_modified, key, tar_builder, processed_keys)
                 .await;
-
-            match object {
-                Ok(resp) => {
-                    compress_object(resp, size, last_modified, key, tar_builder, processed_keys)
-                        .await;
-                }
-                Err(e) => {
-                    eprintln!("Failed to fetch object '{key}': {e}");
-                }
-            }
+        }
+        Err(e) => {
+            eprintln!("Failed to fetch object '{key}': {e}");
         }
     }
 }
