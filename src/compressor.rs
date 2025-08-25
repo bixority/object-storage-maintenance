@@ -1,10 +1,10 @@
 use crate::uploader::MultipartUploadSink;
-use async_compression::tokio::write::XzEncoder;
 use async_compression::Level;
+use async_compression::tokio::write::XzEncoder;
+use aws_sdk_s3::Client;
 use aws_sdk_s3::operation::get_object::GetObjectOutput;
 use aws_sdk_s3::primitives::DateTime;
 use aws_sdk_s3::types::Object;
-use aws_sdk_s3::Client;
 use std::error::Error;
 use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
@@ -49,8 +49,12 @@ async fn process_object(
     if obj.last_modified >= Some(cutoff_aws_dt) {
         return;
     }
-    let Some(key) = obj.key else { return; };
-    let Some(last_modified) = obj.last_modified else { todo!() };
+    let Some(key) = obj.key else {
+        return;
+    };
+    let Some(last_modified) = obj.last_modified else {
+        todo!()
+    };
     let Some(size) = obj.size else { todo!() };
 
     let object = src_client
