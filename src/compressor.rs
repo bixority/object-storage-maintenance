@@ -1,10 +1,10 @@
 use crate::uploader::MultipartUploadSink;
-use async_compression::Level;
 use async_compression::tokio::write::XzEncoder;
-use aws_sdk_s3::Client;
+use async_compression::Level;
 use aws_sdk_s3::operation::get_object::GetObjectOutput;
 use aws_sdk_s3::primitives::DateTime;
 use aws_sdk_s3::types::Object;
+use aws_sdk_s3::Client;
 use std::error::Error;
 use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
@@ -47,14 +47,10 @@ async fn process_object(
     processed_keys: &mut Vec<String>,
 ) {
     if obj.last_modified >= Some(cutoff_aws_dt) {
-        return
+        return;
     }
-    let Some(key) = obj.key else {
-        return
-    };
-    let Some(last_modified) = obj.last_modified else {
-        todo!()
-    };
+    let Some(key) = obj.key else { return; };
+    let Some(last_modified) = obj.last_modified else { todo!() };
     let Some(size) = obj.size else { todo!() };
 
     let object = src_client
@@ -66,8 +62,7 @@ async fn process_object(
 
     match object {
         Ok(resp) => {
-            compress_object(resp, size, last_modified, key, tar_builder, processed_keys)
-                .await;
+            compress_object(resp, size, last_modified, key, tar_builder, processed_keys).await;
         }
         Err(e) => {
             eprintln!("Failed to fetch object '{key}': {e}");
