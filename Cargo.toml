@@ -8,7 +8,7 @@ async-compression = { version = "0.4.30", features = ["tokio", "xz"] }
 aws-sdk-s3 = { version = "1.106.0", features = ["behavior-version-latest", "rt-tokio", "http-1x", "rustls"] }
 aws-types = "1.3.8"
 chrono = "0.4.42"
-clap = { version = "4.5.47", features = ["derive"] }
+clap = { version = "4.5.48", features = ["derive"] }
 futures = "0.3.31"
 mimalloc = { version = "0.1.48", features = ["extended"] }
 tokio = { version = "1.47.1", features = ["rt", "rt-multi-thread", "macros"] }
