@@ -24,8 +24,8 @@ services:
     image: object-storage-maintenance
     container_name: object-storage-maintenance
     environment:
-      AWS_ACCESS_KEY: "${AWS_ACCESS_KEY}"
-      AWS_SECRET_KEY: "${AWS_SECRET_KEY}"
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
       AWS_REGION: "${AWS_REGION:-us-east-1}"
       OBJECT_STORAGE_ENDPOINT: "${OBJECT_STORAGE_ENDPOINT:-http://minio:9000}"
       OBJECT_STORAGE_BUCKET: "${OBJECT_STORAGE_BUCKET:-test}"
