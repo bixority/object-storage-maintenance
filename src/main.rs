@@ -13,9 +13,6 @@ use std::error::Error;
 use std::io;
 use std::io::Write;
 
-#[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
-
 #[derive(ValueEnum, Debug, Clone)]
 enum Compression {
     Fastest,

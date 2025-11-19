@@ -1,3 +1,5 @@
+name: "object-storage-maintenance"
+
 services:
   minio:
     image: quay.io/minio/minio:latest
