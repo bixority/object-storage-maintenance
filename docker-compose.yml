@@ -20,7 +20,7 @@ services:
   object-storage-maintenance:
     build:
       context: ./
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     image: object-storage-maintenance
     container_name: object-storage-maintenance
     environment:
