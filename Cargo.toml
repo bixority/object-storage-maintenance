@@ -1,6 +1,6 @@
 [package]
 name = "object-storage-maintenance"
-version = "0.2.20"
+version = "0.2.21"
 edition = "2024"
 
 [dependencies]
@@ -10,6 +10,7 @@ aws-types = "1.3.10"
 chrono = "0.4.42"
 clap = { version = "4.5.53", features = ["derive"] }
 futures = "0.3.31"
+mimalloc = { version = "0.1.48", features = ["extended"] }
 tokio = { version = "1.48.0", features = ["rt", "rt-multi-thread", "macros"] }
 tokio-tar = "0.3.1"
 
