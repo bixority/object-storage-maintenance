@@ -72,3 +72,8 @@ pub async fn archive(
 
     Ok(())
 }
+
+pub async fn lifecycle(src: String, dst: String) -> Result<(), Box<dyn Error>> {
+    println!("{src} {dst}");
+    Ok(())
+}
