@@ -5,7 +5,7 @@ mod object_storage;
 mod s3;
 mod uploader;
 
-use crate::commands::archive;
+use crate::commands::{archive, lifecycle};
 use async_compression::Level;
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand, ValueEnum};
@@ -40,6 +40,13 @@ enum Commands {
         #[arg(long, value_enum, default_value_t = Compression::Fastest)]
         compression: Compression,
     },
+    Lifecycle {
+        #[arg(long)]
+        src: String,
+
+        #[arg(long)]
+        dst: String,
+    },
 }
 
 #[derive(Parser, Debug)]
@@ -70,12 +77,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 eprintln!("Error running 'archive' command: {e}");
             }
         }
+        Some(Commands::Lifecycle { src, dst }) => {
+            if let Err(e) = lifecycle(src, dst).await {
+                eprintln!("Error running 'lifecycle' command: {e}");
+            }
+        }
         None => {
             println!("No subcommand selected. Add a subcommand like 'archive'.");
         }
     }
 
-    io::stdout().flush().unwrap();
+    io::stdout().flush()?;
 
     Ok(())
 }
