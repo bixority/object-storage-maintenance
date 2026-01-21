@@ -1,7 +1,6 @@
 services:
   minio:
     image: quay.io/minio/minio:latest
-    container_name: minio
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -16,13 +15,16 @@ services:
     ]
     volumes:
       - minio-data:/data
+    networks:
+      common:
+        aliases:
+          - minio
 
   object-storage-maintenance:
     build:
       context: ./
       dockerfile: Containerfile
     image: object-storage-maintenance
-    container_name: object-storage-maintenance
     environment:
       AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
       AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
@@ -37,10 +39,12 @@ services:
       "--dst-prefix", "${DST_PREFIX:-.archive/}",
     ]
     depends_on:
-      - minio
+      minio:
+        condition: service_started
 
 networks:
-  guest:
+  common:
+    driver: bridge
 
 volumes:
   minio-data:
