@@ -1,13 +1,13 @@
 [package]
 name = "object-storage-maintenance"
-version = "0.2.29"
+version = "0.2.30"
 edition = "2024"
 
 [dependencies]
 async-compression = { version = "0.4.40", features = ["tokio", "xz"] }
 aws-sdk-s3 = { version = "1.124.0", features = ["behavior-version-latest", "rt-tokio", "http-1x", "rustls"] }
-aws-types = "1.3.12"
-chrono = "0.4.43"
+aws-types = "1.3.13"
+chrono = "0.4.44"
 clap = { version = "4.5.60", features = ["derive"] }
 futures = "0.3.32"
 mimalloc = { version = "0.1.48", features = ["extended"] }
