@@ -1,6 +1,6 @@
 [package]
 name = "object-storage-maintenance"
-version = "0.2.30"
+version = "0.2.31"
 edition = "2024"
 
 [dependencies]
@@ -11,7 +11,7 @@ chrono = "0.4.44"
 clap = { version = "4.5.60", features = ["derive"] }
 futures = "0.3.32"
 mimalloc = { version = "0.1.48", features = ["extended"] }
-tokio = { version = "1.49.0", features = ["rt", "rt-multi-thread", "macros"] }
+tokio = { version = "1.50.0", features = ["rt", "rt-multi-thread", "macros"] }
 tokio-tar = "0.3.1"
 
 [profile.release]
