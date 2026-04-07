@@ -1634,7 +1634,7 @@ dependencies = [
 
 [[package]]
 name = "object-storage-maintenance"
-version = "0.2.32"
+version = "0.2.33"
 dependencies = [
  "async-compression",
  "aws-sdk-s3",
