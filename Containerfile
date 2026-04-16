@@ -1,8 +1,8 @@
-FROM --platform=$TARGETOS/$TARGETARCH rust:1.92-slim-trixie AS build-image
+FROM --platform=$TARGETOS/$TARGETARCH rust:1.95-slim-trixie AS build-image
 LABEL org.opencontainers.image.description="Object storage maintenance tool"
 LABEL authors="Bixority SIA"
 
-ARG upx_version=5.0.2
+ARG upx_version=5.1.1
 ARG TARGETARCH
 ARG TARGETOS
 
