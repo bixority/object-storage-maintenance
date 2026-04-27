@@ -64,7 +64,7 @@ Note: `AWS_REGION` defaults to `us-east-1`.
 Set the object storage endpoint if you are using a non-standard S3 storage location:
 
 ```dotenv
-OBJECT_STORAGE_ENDPOINT="https://my-storage.company.com:9000"
+AWS_ENDPOINT_URL_S3="https://my-storage.company.com:9000"
 ```
 
 Run the tool with the `archive` command to move and compress objects:

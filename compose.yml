@@ -26,10 +26,10 @@ services:
       dockerfile: Containerfile
     image: object-storage-maintenance
     environment:
+      AWS_ENDPOINT_URL_S3: "${AWS_ENDPOINT_URL_S3:-http://minio:9000}"
       AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
       AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
       AWS_REGION: "${AWS_REGION:-us-east-1}"
-      OBJECT_STORAGE_ENDPOINT: "${OBJECT_STORAGE_ENDPOINT:-http://minio:9000}"
       OBJECT_STORAGE_BUCKET: "${OBJECT_STORAGE_BUCKET:-test}"
     command: [
       "archive",

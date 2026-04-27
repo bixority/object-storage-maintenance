@@ -12,7 +12,7 @@ pub struct S3Params {
 
 pub fn get_s3_params() -> S3Params {
     let region = env::var("AWS_REGION").unwrap_or_else(|_| "us-east-1".to_string());
-    let endpoint = env::var("OBJECT_STORAGE_ENDPOINT").ok();
+    let endpoint = env::var("AWS_ENDPOINT_URL_S3").ok();
     let access_key = env::var("AWS_ACCESS_KEY_ID").expect("AWS_ACCESS_KEY_ID must be set");
     let secret_key = env::var("AWS_SECRET_ACCESS_KEY").expect("AWS_SECRET_ACCESS_KEY must be set");
 
