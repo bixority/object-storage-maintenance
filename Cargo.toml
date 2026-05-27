@@ -15,7 +15,9 @@ tokio = { version = "1.52.3", features = ["rt", "rt-multi-thread", "macros"] }
 tokio-tar = "0.3.1"
 
 [profile.dev]
+debug = true
 incremental = true
+opt-level = 0
 
 [profile.release]
 codegen-units = 1
@@ -26,4 +28,7 @@ panic = "abort"
 strip = true
 
 [profile.release.package."*"]
+codegen-units = 1
+debug = false
 opt-level = 3
+strip = true
