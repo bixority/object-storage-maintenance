@@ -1,6 +1,6 @@
 [package]
 name = "object-storage-maintenance"
-version = "0.2.35"
+version = "0.2.36"
 edition = "2024"
 
 [dependencies]
@@ -14,9 +14,16 @@ mimalloc = { version = "0.1.52", features = ["extended"] }
 tokio = { version = "1.52.3", features = ["rt", "rt-multi-thread", "macros"] }
 tokio-tar = "0.3.1"
 
+[profile.dev]
+incremental = true
+
 [profile.release]
-opt-level = 3
-debug = false
-strip = true
-lto = "fat"
 codegen-units = 1
+debug = false
+lto = "fat"
+opt-level = 3
+panic = "abort"
+strip = true
+
+[profile.release.package."*"]
+opt-level = 3
