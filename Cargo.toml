@@ -5,10 +5,10 @@ edition = "2024"
 
 [dependencies]
 async-compression = { version = "0.4.42", features = ["tokio", "xz"] }
-aws-sdk-s3 = { version = "1.138.0", features = ["behavior-version-latest", "rt-tokio", "http-1x", "rustls"] }
+aws-sdk-s3 = { version = "1.138.1", features = ["behavior-version-latest", "rt-tokio", "http-1x", "rustls"] }
 aws-types = "1.4.0"
 chrono = "0.4.45"
-clap = { version = "4.6.1", features = ["derive"] }
+clap = { version = "4.6.2", features = ["derive"] }
 futures = "0.3.32"
 mimalloc = { version = "0.1.52", features = ["extended"] }
 tokio = { version = "1.53.0", features = ["rt", "rt-multi-thread", "macros"] }
