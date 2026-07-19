@@ -21,10 +21,10 @@ where
     let mut options = Vec::new();
     if url.scheme() == "s3" {
         for (env_var, opt_key) in [
+            ("AWS_ENDPOINT_URL_S3", "endpoint"),
             ("S3_REGION", "region"),
             ("S3_ACCESS_KEY_ID", "access_key_id"),
             ("S3_SECRET_ACCESS_KEY", "secret_access_key"),
-            ("S3_ENDPOINT_URL", "endpoint"),
             ("S3_ALLOW_HTTP", "allow_http"),
         ] {
             if let Some(val) = get_env(env_var) {
