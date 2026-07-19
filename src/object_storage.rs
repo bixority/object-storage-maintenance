@@ -1,57 +1,34 @@
-use aws_sdk_s3::Client;
-use aws_sdk_s3::types::{Delete, ObjectIdentifier};
+use crate::error::Result;
+use futures::StreamExt;
+use object_store::{ObjectStore, path::Path};
 use std::sync::Arc;
 
-pub async fn delete_keys(
-    client: Arc<Client>,
-    bucket_name: &str,
-    keys: Vec<String>,
-) -> Result<(), aws_sdk_s3::Error> {
-    for chunk in keys.chunks(1000) {
-        let objects_to_delete: Vec<ObjectIdentifier> = chunk
-            .iter()
-            .filter_map(|key| match ObjectIdentifier::builder().key(key).build() {
-                Ok(obj) => Some(obj),
-                Err(e) => {
-                    eprintln!("Failed to build ObjectIdentifier for key '{key}': {e}");
+pub async fn delete_keys(store: Arc<dyn ObjectStore>, keys: Vec<String>) -> Result<()> {
+    if keys.is_empty() {
+        return Ok(());
+    }
 
-                    None
-                }
-            })
-            .collect();
+    let locations = futures::stream::iter(keys.into_iter().map(|k| Ok(Path::from(k))));
+    let mut results = store.delete_stream(locations.boxed());
 
-        if objects_to_delete.is_empty() {
-            eprintln!("No valid objects to delete in this chunk.");
-            continue;
-        }
+    let mut success_count = 0;
+    let mut error_count = 0;
 
-        let delete = Delete::builder()
-            .set_objects(Some(objects_to_delete))
-            .build()?;
-
-        match client
-            .delete_objects()
-            .bucket(bucket_name)
-            .delete(delete)
-            .send()
-            .await
-        {
-            Ok(response) => {
-                let deleted_objects = response.deleted();
-                if !deleted_objects.is_empty() {
-                    println!("Successfully deleted {:?} objects.", deleted_objects.len());
-                }
-
-                let errors = response.errors();
-                if !errors.is_empty() {
-                    eprintln!("Failed to delete some objects: {errors:?}");
-                }
-            }
+    while let Some(res) = results.next().await {
+        match res {
+            Ok(_) => success_count += 1,
             Err(e) => {
-                eprintln!("Error occurred while deleting objects: {e}");
-                return Err(e.into());
+                eprintln!("Failed to delete object: {e}");
+                error_count += 1;
             }
         }
+    }
+
+    if success_count > 0 {
+        println!("Successfully deleted {success_count} objects.");
+    }
+    if error_count > 0 {
+        eprintln!("Failed to delete {error_count} objects.");
     }
 
     Ok(())

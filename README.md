@@ -4,7 +4,7 @@
 
 The **Object Storage Maintenance Tool** is a command-line utility designed to **archive and compress objects** stored in
 object storage in a **streaming** manner. It helps manage storage efficiently by gathering objects older than a
-particular date and storing them in a single **TAR** archive, optionally compressing them with **XZ**.
+particular date and storing them in a single **TAR** archive, compressed with **XZ**.
 
 ### Why Use This Tool?
 
@@ -19,8 +19,9 @@ inefficient storage use. For example:
 
 - **Archive Objects**: Consolidates multiple objects into a single **TAR** file.
 - **Streaming Compression**: Uses **XZ** to reduce storage footprint.
+- **Multi-Cloud Support**: Works with AWS S3, Google Cloud Storage, Azure Blob Storage, and local files.
+- **S3-Compatible**: Works with AWS S3 compatible object storages (MinIO, Cloudflare R2, etc.).
 - **Efficient Storage Management**: Helps save costs by reducing wasted space.
-- **S3-Compatible**: Works with AWS S3 compatible object storages.
 
 ## Installation
 
@@ -47,27 +48,52 @@ cargo build --release
 make release
 ```
 
-The binary will be located at `target/release/object-storage-maintenance`.
+The binary will be located at `target/object-storage-maintenance`.
 
 ## Usage
 
 Set the environment variables for S3 client:
 
 ```dotenv
-AWS_REGION="eu-north-1"
-AWS_ACCESS_KEY=
-AWS_SECRET_KEY=
+S3_REGION="eu-north-1"
+S3_ACCESS_KEY_ID=
+S3_SECRET_ACCESS_KEY=
 ```
 
-Note: `AWS_REGION` defaults to `us-east-1`.
+Alternatively, standard AWS environment variables can be used:
+
+```dotenv
+AWS_REGION="eu-north-1"
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+```
+
+Note: `S3_REGION` (or `AWS_REGION`) defaults to `us-east-1`.
 
 Set the object storage endpoint if you are using a non-standard S3 storage location:
+
+```dotenv
+S3_ENDPOINT_URL="https://my-storage.company.com:9000"
+```
+
+Alternatively:
 
 ```dotenv
 AWS_ENDPOINT_URL_S3="https://my-storage.company.com:9000"
 ```
 
-Run the tool with the `archive` command to move and compress objects:
+For S3-compatible storage without HTTPS, you can use:
+
+```dotenv
+S3_ALLOW_HTTP="true"
+```
+
+### Other Storage Providers
+
+The tool also supports Google Cloud Storage (`gs://`), Azure Blob Storage (`az://`), and local files (`file://`). Use the standard environment variables for each provider as supported by the [object_store](https://docs.rs/object_store/latest/object_store/) crate.
+
+Run the tool with the `archive` command to move and compress objects (it will automatically delete original
+objects after successful archiving):
 
 ```shell
 object-storage-maintenance archive \
@@ -100,7 +126,7 @@ object-storage-maintenance archive \
 ### Run in a container
 
 ```shell
-docker run --rm --env-file .env ghcr.io/bixority/object-storage-maintenance:v0.0.2 \
+docker run --rm --env-file .env ghcr.io/bixority/object-storage-maintenance:v0.3.0 \
     archive \
     --src s3://project/audit/ \
     --dst s3://archive/audit/ \
@@ -115,12 +141,12 @@ There is intentionally no `:latest` tag so there are no surprises after seamless
 
 Imagine you have **millions of tiny log files** stored in `s3://project/audit/`:
 
-- Each object is **100 bytes** but takes **4KB**.
-- You can **archive them into a single TAR file**.
-- **Compress the archive with XZ** to save additional space.
+- Each object is **100 bytes** but takes **4KB** on disk/storage.
+- You can **archive them into a single TAR archive**.
+- **The archive is compressed with XZ** to save additional space.
 
 After running the tool, the **tar.xz archive** is stored in `s3://archive/audit/`, significantly reducing storage
-costs.
+costs. Original objects are deleted from the source.
 
 ## License
 

@@ -1,20 +1,16 @@
 mod commands;
 mod compressor;
-mod helpers;
+mod error;
 mod object_storage;
-mod s3;
-mod uploader;
+mod storage;
 
 use crate::commands::archive;
+use crate::error::Result;
 use async_compression::Level;
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand, ValueEnum};
-use std::error::Error;
 use std::io;
 use std::io::Write;
-
-#[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[derive(ValueEnum, Debug, Clone)]
 enum Compression {
@@ -50,7 +46,7 @@ struct Args {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> Result<()> {
     let args = Args::parse();
 
     match args.command {
@@ -66,16 +62,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 Compression::Best => Level::Best,
             };
 
-            if let Err(e) = archive(src, dst, cutoff, buffer, level).await {
-                eprintln!("Error running 'archive' command: {e}");
-            }
+            archive(src, dst, cutoff, buffer, level).await?;
         }
         None => {
             println!("No subcommand selected. Add a subcommand like 'archive'.");
         }
     }
 
-    io::stdout().flush().unwrap();
+    io::stdout().flush()?;
 
     Ok(())
 }
