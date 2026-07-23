@@ -1,5 +1,5 @@
 use crate::compressor::compress;
-use crate::error::Result;
+use crate::error::{AppError, Result};
 use crate::object_storage::delete_keys;
 use crate::storage::get_store_and_path;
 use async_compression::Level;
@@ -27,8 +27,7 @@ pub async fn archive(
     let dst_file_path = dst_path.join(format!("archive_{cutoff_str}.tar.xz"));
 
     let mut archived_keys: Vec<Path> = Vec::new();
-
-    if let Err(e) = compress(
+    compress(
         src_store.as_ref(),
         src_path,
         dst_store,
@@ -39,15 +38,11 @@ pub async fn archive(
         &mut archived_keys,
     )
     .await
-    {
-        eprintln!("Error compressing objects: {e}");
-        return Err(e);
-    }
+    .map_err(|e| AppError::Compression(Box::new(e)))?;
 
-    if let Err(e) = delete_keys(src_store.as_ref(), archived_keys).await {
-        eprintln!("Error deleting archived keys: {e}");
-        return Err(e);
-    }
+    delete_keys(src_store.as_ref(), archived_keys)
+        .await
+        .map_err(|e| AppError::Deletion(Box::new(e)))?;
 
     Ok(())
 }

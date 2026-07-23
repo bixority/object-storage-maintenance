@@ -10,6 +10,15 @@ pub enum AppError {
 
     #[error("Object store error: {0}")]
     ObjectStore(#[from] object_store::Error),
+
+    #[error("Compression error: {0}")]
+    Compression(#[source] Box<Self>),
+
+    #[error("Deletion error: {0}")]
+    Deletion(#[source] Box<Self>),
+
+    #[error("Archive error: {0}")]
+    Archive(String),
 }
 
 impl From<AppError> for std::io::Error {

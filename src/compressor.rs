@@ -16,8 +16,7 @@ async fn compress_object(
     last_modified: DateTime<Utc>,
     location: Path,
     tar_builder: &mut Builder<XzEncoder<BufWriter>>,
-    processed_keys: &mut Vec<Path>,
-) {
+) -> Result<()> {
     let mut header = Header::new_gnu();
     header.set_size(size);
     header.set_mode(0o644);
@@ -29,12 +28,17 @@ async fn compress_object(
 
     println!("Archiving {}", location.as_ref());
 
-    if let Err(e) = tar_builder.append_data(&mut header, location.as_ref(), async_read).await {
-        eprintln!("Failed to append data for object '{}': {e}", location.as_ref());
-        return;
-    }
+    tar_builder
+        .append_data(&mut header, location.as_ref(), async_read)
+        .await
+        .map_err(|e| {
+            std::io::Error::new(
+                e.kind(),
+                format!("Failed to append data for object '{}': {e}", location.as_ref()),
+            )
+        })?;
 
-    processed_keys.push(location);
+    Ok(())
 }
 
 async fn process_objects(
@@ -43,35 +47,29 @@ async fn process_objects(
     cutoff_dt: DateTime<Utc>,
     tar_builder: &mut Builder<XzEncoder<BufWriter>>,
     processed_keys: &mut Vec<Path>,
-) {
+) -> Result<()> {
     let mut list_stream = store.list(Some(&prefix));
 
     while let Some(meta_res) = list_stream.next().await {
         match meta_res {
             Ok(meta) if meta.last_modified < cutoff_dt => {
-                match store.get(&meta.location).await {
-                    Ok(result) => {
-                        compress_object(
-                            result.into_stream(),
-                            meta.size,
-                            meta.last_modified,
-                            meta.location,
-                            tar_builder,
-                            processed_keys,
-                        )
-                        .await;
-                    }
-                    Err(e) => {
-                        eprintln!("Failed to fetch object '{}': {e}", meta.location.as_ref());
-                    }
-                }
+                let result = store.get(&meta.location).await?;
+                compress_object(
+                    result.into_stream(),
+                    meta.size,
+                    meta.last_modified,
+                    meta.location.clone(),
+                    tar_builder,
+                )
+                .await?;
+
+                processed_keys.push(meta.location);
             }
             Ok(_) => {}
-            Err(e) => {
-                eprintln!("Failed to list objects: {e}");
-            }
+            Err(e) => return Err(e.into()),
         }
     }
+    Ok(())
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -96,7 +94,7 @@ pub async fn compress(
         &mut tar_builder,
         processed_keys,
     )
-    .await;
+    .await?;
 
     tar_builder.finish().await?;
     let mut encoder = tar_builder.into_inner().await?;
