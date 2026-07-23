@@ -4,6 +4,7 @@ use crate::object_storage::delete_keys;
 use crate::storage::get_store_and_path;
 use async_compression::Level;
 use chrono::{DateTime as ChronoDateTime, Duration, Utc};
+use object_store::path::Path;
 
 pub async fn archive(
     src: String,
@@ -25,10 +26,10 @@ pub async fn archive(
 
     let dst_file_path = dst_path.join(format!("archive_{cutoff_str}.tar.xz"));
 
-    let mut archived_keys: Vec<String> = Vec::new();
+    let mut archived_keys: Vec<Path> = Vec::new();
 
     if let Err(e) = compress(
-        src_store.clone(),
+        src_store.as_ref(),
         src_path,
         dst_store,
         dst_file_path,
@@ -43,7 +44,7 @@ pub async fn archive(
         return Err(e);
     }
 
-    if let Err(e) = delete_keys(src_store, archived_keys).await {
+    if let Err(e) = delete_keys(src_store.as_ref(), archived_keys).await {
         eprintln!("Error deleting archived keys: {e}");
         return Err(e);
     }

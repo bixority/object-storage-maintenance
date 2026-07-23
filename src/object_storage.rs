@@ -1,14 +1,13 @@
 use crate::error::Result;
 use futures::StreamExt;
 use object_store::{ObjectStore, path::Path};
-use std::sync::Arc;
 
-pub async fn delete_keys(store: Arc<dyn ObjectStore>, keys: Vec<String>) -> Result<()> {
+pub async fn delete_keys(store: &dyn ObjectStore, keys: Vec<Path>) -> Result<()> {
     if keys.is_empty() {
         return Ok(());
     }
 
-    let locations = futures::stream::iter(keys.into_iter().map(|k| Ok(Path::from(k))));
+    let locations = futures::stream::iter(keys.into_iter().map(Ok));
     let mut results = store.delete_stream(locations.boxed());
 
     let mut success_count = 0;

@@ -18,7 +18,7 @@ async fn test_compress_basic() -> crate::error::Result<()> {
     let mut processed_keys = Vec::new();
 
     compress(
-        src_store.clone(),
+        src_store.as_ref(),
         Path::from(""),
         dst_store.clone(),
         Path::from("archive.tar.xz"),
@@ -30,8 +30,8 @@ async fn test_compress_basic() -> crate::error::Result<()> {
     .await?;
 
     assert_eq!(processed_keys.len(), 2);
-    assert!(processed_keys.contains(&"file1.txt".to_string()));
-    assert!(processed_keys.contains(&"file2.txt".to_string()));
+    assert!(processed_keys.contains(&Path::from("file1.txt")));
+    assert!(processed_keys.contains(&Path::from("file2.txt")));
 
     let dst_list = dst_store.list(None).collect::<Vec<_>>().await;
     assert_eq!(dst_list.len(), 1);

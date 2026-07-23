@@ -14,9 +14,9 @@ async fn compress_object(
     stream: futures::stream::BoxStream<'static, object_store::Result<Bytes>>,
     size: u64,
     last_modified: DateTime<Utc>,
-    key: String,
+    location: Path,
     tar_builder: &mut Builder<XzEncoder<BufWriter>>,
-    processed_keys: &mut Vec<String>,
+    processed_keys: &mut Vec<Path>,
 ) {
     let mut header = Header::new_gnu();
     header.set_size(size);
@@ -27,43 +27,42 @@ async fn compress_object(
     // Adapt the stream to AsyncRead
     let async_read = tokio_util::io::StreamReader::new(stream);
 
-    println!("Archiving {key}");
+    println!("Archiving {}", location.as_ref());
 
-    if let Err(e) = tar_builder.append_data(&mut header, &key, async_read).await {
-        eprintln!("Failed to append data for object '{key}': {e}");
+    if let Err(e) = tar_builder.append_data(&mut header, location.as_ref(), async_read).await {
+        eprintln!("Failed to append data for object '{}': {e}", location.as_ref());
         return;
     }
 
-    processed_keys.push(key);
+    processed_keys.push(location);
 }
 
 async fn process_objects(
-    store: Arc<dyn ObjectStore>,
+    store: &dyn ObjectStore,
     prefix: Path,
     cutoff_dt: DateTime<Utc>,
     tar_builder: &mut Builder<XzEncoder<BufWriter>>,
-    processed_keys: &mut Vec<String>,
+    processed_keys: &mut Vec<Path>,
 ) {
     let mut list_stream = store.list(Some(&prefix));
 
     while let Some(meta_res) = list_stream.next().await {
         match meta_res {
             Ok(meta) if meta.last_modified < cutoff_dt => {
-                let key = meta.location.to_string();
                 match store.get(&meta.location).await {
                     Ok(result) => {
                         compress_object(
                             result.into_stream(),
                             meta.size,
                             meta.last_modified,
-                            key,
+                            meta.location,
                             tar_builder,
                             processed_keys,
                         )
                         .await;
                     }
                     Err(e) => {
-                        eprintln!("Failed to fetch object '{key}': {e}");
+                        eprintln!("Failed to fetch object '{}': {e}", meta.location.as_ref());
                     }
                 }
             }
@@ -77,14 +76,14 @@ async fn process_objects(
 
 #[allow(clippy::too_many_arguments)]
 pub async fn compress(
-    src_store: Arc<dyn ObjectStore>,
+    src_store: &dyn ObjectStore,
     src_path: Path,
     dst_store: Arc<dyn ObjectStore>,
     dst_path: Path,
     cutoff_dt: DateTime<Utc>,
     buffer_size: usize,
     level: Level,
-    processed_keys: &mut Vec<String>,
+    processed_keys: &mut Vec<Path>,
 ) -> Result<()> {
     let sink = BufWriter::with_capacity(dst_store, dst_path, buffer_size);
     let encoder = XzEncoder::with_quality(sink, level);
