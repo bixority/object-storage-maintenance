@@ -34,7 +34,10 @@ async fn compress_object(
         .map_err(|e| {
             std::io::Error::new(
                 e.kind(),
-                format!("Failed to append data for object '{}': {e}", location.as_ref()),
+                format!(
+                    "Failed to append data for object '{}': {e}",
+                    location.as_ref()
+                ),
             )
         })?;
 
