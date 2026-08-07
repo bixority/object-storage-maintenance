@@ -7,7 +7,7 @@ edition = "2024"
 async-compression = { version = "0.4.43", features = ["tokio", "xz"] }
 bytes = "1.12.1"
 chrono = "0.4.45"
-clap = { version = "4.6.4", features = ["derive"] }
+clap = { version = "4.6.6", features = ["derive"] }
 futures = "0.3.33"
 object_store = { version = "0.14.1", features = ["aws", "azure", "gcp", "http", "tokio"] }
 tokio = { version = "1.53.1", features = ["rt", "rt-multi-thread", "macros"] }
