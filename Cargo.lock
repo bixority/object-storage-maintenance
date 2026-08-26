@@ -1050,7 +1050,7 @@ dependencies = [
 
 [[package]]
 name = "object-storage-maintenance"
-version = "0.3.4"
+version = "0.3.3"
 dependencies = [
  "async-compression",
  "bytes",
