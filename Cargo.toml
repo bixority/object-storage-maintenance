@@ -1,11 +1,11 @@
 [package]
 name = "object-storage-maintenance"
-version = "0.3.4"
+version = "0.3.5"
 rust-version = "1.98"
 edition = "2024"
 
 [dependencies]
-async-compression = { version = "0.4.44", features = ["tokio", "xz"] }
+async-compression = { version = "0.4.47", features = ["tokio", "xz"] }
 bytes = "1.12.1"
 chrono = "0.4.45"
 clap = { version = "4.6.6", features = ["derive"] }
