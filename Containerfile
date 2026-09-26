@@ -2,18 +2,12 @@ FROM --platform=$TARGETOS/$TARGETARCH rust:1.98.1-slim-trixie AS build-image
 LABEL org.opencontainers.image.description="Object storage maintenance tool"
 LABEL authors="Bixority SIA"
 
-ARG upx_version=5.1.1
 ARG TARGETARCH
 ARG TARGETOS
 
 WORKDIR /build
 
-RUN apt update && apt install -y --no-install-recommends make curl xz-utils musl-tools musl-dev && \
-  curl -Ls https://github.com/upx/upx/releases/download/v${upx_version}/upx-${upx_version}-${TARGETARCH}_${TARGETOS}.tar.xz -o - | tar xvJf - -C /tmp && \
-  cp /tmp/upx-${upx_version}-${TARGETARCH}_${TARGETOS}/upx /usr/local/bin/ && \
-  chmod +x /usr/local/bin/upx && \
-  apt remove -y xz-utils && \
-  rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install -y --no-install-recommends make curl musl-tools musl-dev
 
 COPY ./ /build/
 
