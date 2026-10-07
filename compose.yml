@@ -16,7 +16,7 @@ services:
       timeout: 10s
       retries: 5
     volumes:
-      - ./.docker/garage.toml:/etc/garage.toml:ro,Z
+      - ./.docker/garage.toml:/etc/garage.toml:ro,z
       - garage-meta:/var/lib/garage/meta
       - garage-data:/var/lib/garage/data
     networks:
@@ -40,7 +40,7 @@ services:
       timeout: 3s
       retries: 3
     volumes:
-      - ./.docker/garage.toml:/etc/garage.toml:ro,Z
+      - ./.docker/garage.toml:/etc/garage.toml:ro,z
     depends_on:
       garage:
         condition: service_healthy
